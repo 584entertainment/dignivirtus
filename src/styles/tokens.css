@@ -1,0 +1,54 @@
+:root {
+  /* Background */
+  --bg-base: #0b0d09;
+  --bg-radial-top: #161c0e;
+
+  /* Card surfaces */
+  --surface-1: #13170e;
+  --surface-2: #171c11;
+  --hero-grad-top: #1b2310;
+  --hero-grad-mid: #13170e;
+  --hero-grad-bottom: #0e120a;
+
+  /* Text */
+  --text-primary: #f1f5ea;
+  --text-secondary: rgba(241, 245, 234, 0.6);
+  --text-tertiary: rgba(241, 245, 234, 0.4);
+
+  /* Accent */
+  --volt: #c8f135;
+  --foil-pale: #f4ffd0;
+  --foil-mid: #d8f55c;
+  --foil-olive: #93b722;
+
+  /* Semantic */
+  --good: #8fd69b;
+  --warn: #e2603c;
+  --streak-orange: #e8843c;
+
+  /* Tiers */
+  --tier-bronze: #c08552;
+  --tier-silver: #aeb6bd;
+  --tier-gold: #d9a94a;
+  --tier-hof: #c9a6e8;
+  --tier-legend: #ffe9a8;
+
+  /* Borders / lines */
+  --border-faint: rgba(255, 255, 255, 0.07);
+  --border-soft: rgba(255, 255, 255, 0.09);
+  --border-volt: rgba(200, 241, 53, 0.35);
+
+  /* Radii */
+  --radius-card: 20px;
+  --radius-card-lg: 26px;
+  --radius-sm: 14px;
+  --radius-pill: 99px;
+
+  /* Fonts */
+  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Motion */
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}

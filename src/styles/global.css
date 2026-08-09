@@ -1,0 +1,89 @@
+@import "./tokens.css";
+@import "./animations.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(
+      circle at 50% -10%,
+      var(--bg-radial-top),
+      var(--bg-base) 55%
+    )
+    fixed;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+button:active {
+  transform: scale(0.92);
+}
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 88px;
+}
+
+.screen {
+  padding: 20px 18px 12px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--volt);
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
