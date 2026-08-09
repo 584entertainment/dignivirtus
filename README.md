@@ -1,16 +1,21 @@
-# React + Vite
+# Dignivirtus
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A gamified fitness tracker: a 0–100 "Overall" rating built from five attributes (Strength, Endurance, Mobility, Recovery, Speed), a 20-badge collection with six tiers each (Bronze → Silver → Gold → Hall of Fame → Legend), a live workout logger, and step/water/sleep tracking. Everything is computed from what you actually log — no backend, data lives in your browser (`localStorage`).
 
-Currently, two official plugins are available:
+Live at [dignivirtus.com](https://dignivirtus.com).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Development
 
-## React Compiler
+```bash
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Deploying
 
-## Expanding the Oxlint configuration
+```bash
+npm run build
+npx gh-pages -d dist
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Pushes the built app to the `gh-pages` branch, which GitHub Pages serves at the custom domain configured in the repo settings.
