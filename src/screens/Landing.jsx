@@ -155,8 +155,8 @@ export default function Landing() {
             <span className="label-mono">THE COLLECTION</span>
             <h2 className="lp-h2">Twenty badges. Six tiers. Most people never see Legend.</h2>
             <p className="lp-lead">
-              Every badge tracks one real metric and each tier roughly doubles the one below it. Earned
-              tiers are permanent — once you've taken Gold, it's yours for good.
+              Every badge tracks one real metric and each tier roughly doubles the one below it. Bronze is
+              yours for good — every tier above it has to be held.
             </p>
           </div>
 
@@ -214,19 +214,19 @@ export default function Landing() {
         <div className="lp-wrap lp-grid lp-grid-2">
           <div>
             <span className="label-mono">THE CATCH</span>
-            <h2 className="lp-h2">Badges are permanent. Your rating isn't.</h2>
+            <h2 className="lp-h2">Nothing here is yours by default.</h2>
             <p className="lp-lead">
-              Tiers you've earned can never be taken away. Attributes are the opposite — stop doing the
-              work and they slide, and Speed slides fastest of all. It's the honest version of a fitness
-              score, and you can switch the warnings off if you'd rather not see them.
+              Your rating moves both ways, and so do your badges. Hold a tier by still doing the work that
+              earned it — go quiet for weeks and it drops back, one step at a time. You always get a
+              warning first, and Bronze is the one thing nobody can take off you.
             </p>
           </div>
           <div className="lp-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <BadgeEmblem shape="bolt" tier="gold" size={44} />
               <div>
-                <div style={{ fontWeight: 700 }}>Kept forever</div>
-                <p style={{ fontSize: 13 }}>Every tier you reach is locked in permanently.</p>
+                <div style={{ fontWeight: 700 }}>Held, not hoarded</div>
+                <p style={{ fontSize: 13 }}>Keep performing at the level that earned the tier and it stays.</p>
               </div>
             </div>
             <div style={{ height: 1, background: "var(--border-faint)" }} />
@@ -248,8 +248,8 @@ export default function Landing() {
                 −2
               </div>
               <div>
-                <div style={{ fontWeight: 700, color: "var(--warn)" }}>Earned back, not given</div>
-                <p style={{ fontSize: 13 }}>Skip the work and the attribute drifts down.</p>
+                <div style={{ fontWeight: 700, color: "var(--warn)" }}>Warned before it costs you</div>
+                <p style={{ fontSize: 13 }}>Slip and you get days of notice, not a nasty surprise.</p>
               </div>
             </div>
           </div>

@@ -116,9 +116,9 @@ export default function Recovery({ nav }) {
           USE IT OR LOSE IT
         </div>
         <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
-          Badges you have already earned are permanent — a Gold tier never drops back to Silver. Attributes
-          are different: they trend down when the underlying behavior lapses, so a quiet week can cost you
-          a point or two even with badges locked in.
+          Your rating and your badges both move in two directions. Stop doing the work that earned a tier
+          and, after a few weeks of warnings, it drops back a step. Bronze is the exception — once you've
+          started something, that much is yours for good.
         </p>
       </div>
     </div>

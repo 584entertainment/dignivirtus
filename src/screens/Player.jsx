@@ -1,6 +1,7 @@
 import { useAppState } from "../engine/store.jsx";
 import { computeOverall, computeOverallRaw, baselineOverall, sessionsToNextPoint } from "../engine/overall.js";
 import { computeBadgeView } from "../engine/badgeProgress.js";
+import { badgesAtRisk } from "../engine/regression.js";
 import { BADGES } from "../data/badges.js";
 import { todayKey } from "../engine/dateUtils.js";
 import AttributeRow from "../components/AttributeRow.jsx";
@@ -35,6 +36,7 @@ export default function Player({ nav }) {
   ];
   const questsLeft = quests.filter((q) => !q.done).length;
 
+  const atRisk = badgesAtRisk(state);
   const badgeViews = BADGES.map((b, i) => computeBadgeView(b, state, i));
   const closest = [...badgeViews].filter((b) => b.tier !== "legend").sort((a, b) => b.pct - a.pct)[0] || badgeViews[0];
   const nextLabel = closest.nextTierLabel;
@@ -150,6 +152,38 @@ export default function Player({ nav }) {
           </span>
         </div>
       </div>
+
+      {atRisk.length > 0 && (
+        <button
+          onClick={() => nav("badges")}
+          className="card"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            textAlign: "left",
+            marginBottom: 18,
+            border: "1px solid rgba(226,96,60,.42)",
+            background: "rgba(226,96,60,.09)",
+          }}
+        >
+          <BadgeEmblem shape={atRisk[0].badge.shape} tier={atRisk[0].risk.tier} size={38} />
+          <div style={{ flex: 1 }}>
+            <div className="mono" style={{ fontSize: 10, color: "var(--warn)", letterSpacing: "0.12em" }}>
+              {atRisk.length === 1 ? "1 BADGE SLIPPING" : `${atRisk.length} BADGES SLIPPING`}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginTop: 3 }}>
+              {atRisk.length === 1
+                ? `${atRisk[0].badge.name} drops in ${atRisk[0].risk.daysLeft} days`
+                : "Tiers you earned are about to go"}
+            </div>
+          </div>
+          <span className="mono" style={{ fontSize: 16, color: "var(--warn)" }}>
+            →
+          </span>
+        </button>
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
         <span className="label-mono">TODAY'S THREE</span>

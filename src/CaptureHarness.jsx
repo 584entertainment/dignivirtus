@@ -4,18 +4,23 @@ import TabBar from "./components/TabBar.jsx";
 import Player from "./screens/Player.jsx";
 import Badges from "./screens/Badges.jsx";
 import Crew from "./screens/Crew.jsx";
+import BadgeDetail from "./screens/BadgeDetail.jsx";
 import Unlock from "./screens/Unlock.jsx";
 
 // DEV-ONLY. Renders real app screens with seeded data and no login, purely so the
 // marketing trailer can be shot against genuine UI. Guarded by import.meta.env.DEV
 // in App.jsx, so it is dead code in any production build.
 
-const today = new Date().toISOString().slice(0, 10);
-const entry = (amount, dayOffset = 0) => {
+const dayKeyOffset = (dayOffset = 0) => {
   const d = new Date();
   d.setDate(d.getDate() - dayOffset);
-  return { date: d.toISOString().slice(0, 10), amount };
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 };
+const today = dayKeyOffset(0);
+const entry = (amount, dayOffset = 0) => ({ date: dayKeyOffset(dayOffset), amount });
 
 const DEMO_STATE = {
   onboarded: true,
@@ -37,6 +42,9 @@ const DEMO_STATE = {
     sprint: "bronze", sub9: "locked", split: "locked", start: "locked",
   },
   flags: { hingePR: true },
+  // Ten-K Club has not been holding its Silver rate, and its grace window is
+  // nearly up — exercises the at-risk path in the UI.
+  badgeHold: { tenk: dayKeyOffset(40) },
   logs: {
     lateralDeltSets: [entry(4), entry(5, 1), entry(6, 2)],
     posteriorChainSets: [entry(6), entry(5, 2)],
@@ -84,7 +92,15 @@ export default function CaptureHarness() {
   }
 
   const body =
-    screen === "badges" ? <Badges nav={nav} /> : screen === "crew" ? <Crew nav={nav} /> : <Player nav={nav} />;
+    screen === "badges" ? (
+      <Badges nav={nav} />
+    ) : screen === "crew" ? (
+      <Crew nav={nav} />
+    ) : screen === "detail" ? (
+      <BadgeDetail nav={nav} />
+    ) : (
+      <Player nav={nav} />
+    );
 
   return (
     <div className="app-shell">

@@ -3,6 +3,7 @@ import { BADGES } from "../data/badges.js";
 import { baselineFromAnswers } from "../data/survey.js";
 import { eligibleTierIndex, ORDER } from "./badgeProgress.js";
 import { applyAttributeBump, maybeRollWeekSnapshot, computeAttributes } from "./overall.js";
+import { applyRegression } from "./regression.js";
 import { todayKey, daysAgo } from "./dateUtils.js";
 
 const METRIC_LOG_KEYS = [
@@ -45,7 +46,32 @@ function defaultState() {
     unlockQueue: [],
     onboardedAt: null,
     lastUnlock: null,
+    // Last date each badge was seen performing at the level that earned its tier.
+    badgeHold: {},
+    // Tier drops since the player last acknowledged them.
+    lostQueue: [],
   };
+}
+
+/** Recompute promotions, then demotions, in that order. */
+function settleBadges(state) {
+  const { badgeTiers, unlocks } = recomputeBadgeTiers(state);
+  let next = {
+    ...state,
+    badgeTiers,
+    unlockQueue: [...state.unlockQueue, ...unlocks],
+    lastUnlock: unlocks.length ? unlocks[unlocks.length - 1] : state.lastUnlock,
+  };
+
+  const reg = applyRegression(next);
+  next = {
+    ...next,
+    badgeHold: reg.badgeHold,
+    badgeTiers: reg.badgeTiers,
+    lostQueue: [...(next.lostQueue || []), ...reg.demotions],
+  };
+
+  return withSeasonPeak(next);
 }
 
 function recomputeBadgeTiers(state) {
@@ -88,7 +114,9 @@ function reducer(state, action) {
         next.streak = 1;
       }
       next.lastOpenDate = today;
-      return withSeasonPeak(next);
+      // Opening the app is when lapses get reckoned with — a tier can be lost
+      // between sessions, not only while actively logging.
+      return next.onboarded ? settleBadges(next) : withSeasonPeak(next);
     }
 
     // Replace local state with whatever came back from the cloud (or the offline
@@ -157,14 +185,7 @@ function reducer(state, action) {
         const bump = applyAttributeBump(next, action.attr);
         next = { ...next, ...bump };
       }
-      const { badgeTiers, unlocks } = recomputeBadgeTiers(next);
-      next = {
-        ...next,
-        badgeTiers,
-        unlockQueue: [...next.unlockQueue, ...unlocks],
-        lastUnlock: unlocks.length ? unlocks[unlocks.length - 1] : next.lastUnlock,
-      };
-      return withSeasonPeak(next);
+      return settleBadges(next);
     }
 
     case "SET_RESTING_HR": {
@@ -173,28 +194,17 @@ function reducer(state, action) {
       const baselines = { ...state.baselines };
       if (baselines.restingHR == null) baselines.restingHR = action.value;
       let next = { ...state, logs, baselines, ...applyAttributeBump(state, "REC") };
-      const { badgeTiers, unlocks } = recomputeBadgeTiers(next);
-      next = {
-        ...next,
-        badgeTiers,
-        unlockQueue: [...next.unlockQueue, ...unlocks],
-        lastUnlock: unlocks.length ? unlocks[unlocks.length - 1] : next.lastUnlock,
-      };
-      return withSeasonPeak(next);
+      return settleBadges(next);
     }
 
     case "SET_FLAG": {
       const flags = { ...state.flags, [action.flag]: action.value };
       let next = { ...state, flags };
-      const { badgeTiers, unlocks } = recomputeBadgeTiers(next);
-      next = {
-        ...next,
-        badgeTiers,
-        unlockQueue: [...next.unlockQueue, ...unlocks],
-        lastUnlock: unlocks.length ? unlocks[unlocks.length - 1] : next.lastUnlock,
-      };
-      return withSeasonPeak(next);
+      return settleBadges(next);
     }
+
+    case "DISMISS_LOSS":
+      return { ...state, lostQueue: state.lostQueue.slice(1) };
 
     case "DISMISS_UNLOCK":
       return { ...state, unlockQueue: state.unlockQueue.slice(1) };

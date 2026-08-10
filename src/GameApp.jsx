@@ -12,6 +12,7 @@ import Recovery from "./screens/Recovery.jsx";
 import Crew from "./screens/Crew.jsx";
 import Profile from "./screens/Profile.jsx";
 import Unlock from "./screens/Unlock.jsx";
+import TierLost from "./screens/TierLost.jsx";
 import appIcon from "./assets/generated/app-icon.svg";
 
 const TAB_SCREENS = new Set(["player", "badges", "log", "crew"]);
@@ -81,6 +82,8 @@ export default function GameApp() {
   }
 
   const pendingUnlock = ready && state.onboarded ? state.unlockQueue[0] : null;
+  // A win outranks a loss: never show a demotion on top of a celebration.
+  const pendingLoss = ready && state.onboarded && !pendingUnlock ? (state.lostQueue || [])[0] : null;
   const showTabs = ready && state.onboarded && TAB_SCREENS.has(state.screen);
 
   // Keyed by screen so the enter animation replays on every navigation.
@@ -96,6 +99,7 @@ export default function GameApp() {
       {keyedBody}
       {showTabs && <TabBar active={state.screen} onNav={nav} />}
       {pendingUnlock && <Unlock unlock={pendingUnlock} nav={nav} />}
+      {pendingLoss && <TierLost loss={pendingLoss} nav={nav} />}
     </div>
   );
 }

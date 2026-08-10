@@ -1,6 +1,7 @@
 import { useAppState, useAppDispatch } from "../engine/store.jsx";
 import { BADGES } from "../data/badges.js";
 import { computeBadgeView } from "../engine/badgeProgress.js";
+import { badgeRisk } from "../engine/regression.js";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
 import ProgressBar from "../components/ProgressBar.jsx";
 
@@ -9,7 +10,10 @@ const FILTERS = ["ALL", "STR", "END", "MOB", "REC", "SPD"];
 export default function Badges({ nav }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const views = BADGES.map((b, i) => computeBadgeView(b, state, i));
+  const views = BADGES.map((b, i) => ({
+    ...computeBadgeView(b, state, i),
+    risk: badgeRisk(b, state),
+  }));
   const started = views.filter((v) => v.tier !== "locked").length;
   const gold = views.filter((v) => ["gold", "hof", "legend"].includes(v.tier)).length;
   const legend = views.filter((v) => v.tier === "legend").length;
@@ -73,16 +77,31 @@ export default function Badges({ nav }) {
             </div>
             <div style={{ fontWeight: 700, fontSize: 13, minHeight: 32, lineHeight: 1.3 }}>{b.name}</div>
             <ProgressBar pct={b.pct} color={b.tierColor === "rgba(241,245,234,.4)" ? "var(--volt)" : b.tierColor} height={4} />
-            <span
-              className="mono"
-              style={{
-                fontSize: 10,
-                color: b.pct >= 75 ? b.tierColor : "var(--text-tertiary)",
-                animation: b.pct >= 75 ? "callOutPulse 1.8s ease-in-out infinite" : "none",
-              }}
-            >
-              {b.hint}
-            </span>
+            {b.risk.status === "at_risk" || b.risk.status === "dropping" ? (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--warn)",
+                  animation: "callOutPulse 1.6s ease-in-out infinite",
+                }}
+              >
+                {b.risk.status === "dropping"
+                  ? "DROPPING A TIER"
+                  : `AT RISK · ${b.risk.daysLeft}D LEFT`}
+              </span>
+            ) : (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: b.pct >= 75 ? b.tierColor : "var(--text-tertiary)",
+                  animation: b.pct >= 75 ? "callOutPulse 1.8s ease-in-out infinite" : "none",
+                }}
+              >
+                {b.hint}
+              </span>
+            )}
           </button>
         ))}
       </div>
