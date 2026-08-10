@@ -1,11 +1,10 @@
 import { useRef, useState } from "react";
 import BadgeEmblem from "../BadgeEmblem.jsx";
 
-// Drop the finished hype video in as `src/assets/generated/hero.mp4`, then set:
-//   import heroVideo from "../../assets/generated/hero.mp4";
-//   const HERO_VIDEO = heroVideo;
-// Everything below already handles it — no other change needed.
-const HERO_VIDEO = null;
+import heroVideo from "../../assets/generated/hero.mp4";
+import heroPoster from "../../assets/generated/hero-poster.jpg";
+
+const HERO_VIDEO = heroVideo;
 
 const LADDER = ["bronze", "silver", "gold", "hof", "legend"];
 const SHAPES = ["wing", "bolt", "rings", "drop", "dial"];
@@ -50,6 +49,7 @@ export default function HeroMedia() {
       <video
         ref={videoRef}
         src={HERO_VIDEO}
+        poster={heroPoster}
         autoPlay
         muted={muted}
         loop
