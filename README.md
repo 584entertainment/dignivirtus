@@ -14,8 +14,7 @@ npm run dev
 ## Deploying
 
 ```bash
-npm run build
-npx gh-pages -d dist
+npm run deploy
 ```
 
-Pushes the built app to the `gh-pages` branch, which GitHub Pages serves at the custom domain configured in the repo settings.
+Builds and pushes to the `gh-pages` branch, which GitHub Pages serves at dignivirtus.com. `public/CNAME` carries the custom domain into every build — don't delete it.
