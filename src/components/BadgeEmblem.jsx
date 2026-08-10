@@ -1,4 +1,5 @@
-import { TIER_ART } from "../data/tiers.js";
+import { useEffect, useRef, useState } from "react";
+import { TIER_ART, ORDER } from "../data/tiers.js";
 import wing from "../assets/badges/wing.png";
 import hinge from "../assets/badges/hinge.png";
 import grip from "../assets/badges/grip.png";
@@ -18,6 +19,19 @@ const HEX = "polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)";
 // Ported from design_handoff_fitness_overall/BadgeEmblem.dc.html — the hexagonal
 // foil/plate/tint emblem recipe, tier-tinted via CSS filter over a flat silhouette icon.
 export default function BadgeEmblem({ shape = "rings", tier = "locked", size = 44, animate, style }) {
+  // Flash whenever this badge climbs a tier, so an upgrade is felt in the grid and
+  // not only on the full-screen unlock moment.
+  const prevTier = useRef(tier);
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    const climbed = ORDER.indexOf(tier) > ORDER.indexOf(prevTier.current);
+    prevTier.current = tier;
+    if (!climbed) return;
+    setFlash(true);
+    const id = setTimeout(() => setFlash(false), 1200);
+    return () => clearTimeout(id);
+  }, [tier]);
+
   const w = size;
   const h = Math.round(w * 1.16);
   const t = TIER_ART[tier] || TIER_ART.locked;
@@ -35,6 +49,7 @@ export default function BadgeEmblem({ shape = "rings", tier = "locked", size = 4
 
   return (
     <div
+      className={flash ? "tier-up" : undefined}
       style={{
         position: "relative",
         flex: "none",

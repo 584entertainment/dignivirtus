@@ -73,8 +73,36 @@ button:active {
   }
 }
 
+/* Cards deal in like a hand of collectibles rather than appearing all at once. */
+@keyframes badgeDealIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
 .badge-card {
   transition: transform 0.22s var(--ease-out), box-shadow 0.22s ease, border-color 0.22s ease;
+  animation: badgeDealIn 0.5s var(--ease-out) both;
+}
+
+/* Played when a badge crosses into a new tier. */
+@keyframes tierUpFlash {
+  0% {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45)) brightness(1);
+    transform: scale(1);
+  }
+  35% {
+    filter: drop-shadow(0 0 26px var(--volt)) brightness(1.7);
+    transform: scale(1.16);
+  }
+  100% {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45)) brightness(1);
+    transform: scale(1);
+  }
+}
+.tier-up {
+  animation: tierUpFlash 1.1s var(--ease-out);
 }
 .badge-card:hover {
   transform: translateY(-3px);

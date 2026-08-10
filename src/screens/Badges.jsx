@@ -47,12 +47,13 @@ export default function Badges({ nav }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {shown.map((b) => (
+        {shown.map((b, i) => (
           <button
             key={b.id}
             onClick={() => nav("detail", b.id)}
             className="card badge-card"
             style={{
+              animationDelay: `${Math.min(i, 11) * 0.045}s`,
               position: "relative",
               overflow: "hidden",
               textAlign: "left",

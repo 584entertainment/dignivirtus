@@ -5,6 +5,7 @@ import Landing from "./screens/Landing.jsx";
 import SignUp from "./screens/SignUp.jsx";
 import LogIn from "./screens/LogIn.jsx";
 import GameApp from "./GameApp.jsx";
+import CaptureHarness from "./CaptureHarness.jsx";
 
 function Redirect({ to }) {
   const { navigate } = useRouter();
@@ -17,6 +18,12 @@ function Redirect({ to }) {
 export default function App() {
   const { path } = useRouter();
   const { session, loading } = useAuth();
+
+  // Dev-only screen capture harness for shooting the trailer against real UI.
+  // Dead code in production builds.
+  if (import.meta.env.DEV && path === "/capture") {
+    return <CaptureHarness />;
+  }
 
   // Avoid deciding anything until we know whether there's a session — otherwise a
   // signed-in user hitting /app directly gets bounced to the login screen for a

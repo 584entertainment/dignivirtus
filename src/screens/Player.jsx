@@ -4,6 +4,7 @@ import { computeBadgeView } from "../engine/badgeProgress.js";
 import { BADGES } from "../data/badges.js";
 import { todayKey } from "../engine/dateUtils.js";
 import AttributeRow from "../components/AttributeRow.jsx";
+import AnimatedNumber from "../components/AnimatedNumber.jsx";
 import ProgressBar from "../components/ProgressBar.jsx";
 import StatTile from "../components/StatTile.jsx";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
@@ -109,9 +110,13 @@ export default function Player({ nav }) {
                   animation: "breatheGlow 3.2s ease-in-out infinite",
                 }}
               />
-              <span
+              <AnimatedNumber
+                value={overall}
+                from={0}
+                duration={1250}
                 style={{
                   position: "relative",
+                  display: "inline-block",
                   fontSize: 92,
                   fontWeight: 900,
                   background: "linear-gradient(180deg, var(--foil-pale), var(--foil-mid) 55%, var(--foil-olive))",
@@ -119,9 +124,7 @@ export default function Player({ nav }) {
                   backgroundClip: "text",
                   color: "transparent",
                 }}
-              >
-                {overall}
-              </span>
+              />
             </div>
             <div className="mono" style={{ color: "var(--good)", fontSize: 12, marginTop: -4 }}>
               +{Math.max(0, attrs.reduce((a, b) => a + b.delta, 0) > 0 ? Math.round(attrs.reduce((a, b) => a + b.delta, 0) / 5) || 1 : 0)} wk
