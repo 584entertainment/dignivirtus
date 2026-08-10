@@ -1,14 +1,13 @@
 import { useRouter } from "../router.jsx";
 import { useAuth } from "../lib/auth.jsx";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
+import HeroMedia from "../components/marketing/HeroMedia.jsx";
+import PlayerCard from "../components/marketing/PlayerCard.jsx";
 import { ATTRIBUTES } from "../data/attributes.js";
 import { BADGES } from "../data/badges.js";
 import { TIERS, RARITY } from "../data/tiers.js";
 import appIcon from "../assets/generated/app-icon.svg";
 import burst from "../assets/generated/unlock-backdrop.jpg";
-
-// Sample figures purely for the marketing card — real players start from their survey.
-const DEMO = { overall: 61, attrs: [["STR", 68], ["END", 64], ["MOB", 51], ["REC", 63], ["SPD", 58]] };
 
 const LADDER = ["bronze", "silver", "gold", "hof", "legend"];
 
@@ -90,45 +89,7 @@ export default function Landing() {
             <p className="lp-note">FREE · NO CARD · TAKES ABOUT TWO MINUTES</p>
           </div>
 
-          <div className="card-3d">
-            <div className="player-card">
-              <div className="sheen" />
-              <div className="label-mono">OVERALL</div>
-              <div className="pc-ovr foil">{DEMO.overall}</div>
-              <div className="mono" style={{ color: "var(--good)", fontSize: 12, marginTop: 8 }}>
-                +1 this week
-              </div>
-              <div style={{ marginTop: 20 }}>
-                {DEMO.attrs.map(([key, val], i) => (
-                  <div className="pc-attr-row" key={key}>
-                    <span className="pc-attr-key">{key}</span>
-                    <span className="pc-bar">
-                      <span style={{ width: `${val}%`, animationDelay: `${i * 0.09}s` }} />
-                    </span>
-                    <span className="pc-attr-val">{val}</span>
-                  </div>
-                ))}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginTop: 22,
-                  paddingTop: 16,
-                  borderTop: "1px solid var(--border-faint)",
-                }}
-              >
-                <BadgeEmblem shape="wing" tier="silver" size={38} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>Deltoid Deadeye</div>
-                  <div className="mono" style={{ fontSize: 10, color: "var(--text-tertiary)" }}>
-                    SILVER → GOLD · 62%
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroMedia />
         </div>
       </header>
 
@@ -160,6 +121,29 @@ export default function Landing() {
                 <p>{a.how}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- the card, in its own moment ---------------- */}
+      <section className="lp-section" style={{ borderTop: "1px solid var(--border-faint)" }}>
+        <div className="lp-wrap card-showcase">
+          <div className="card-3d">
+            <PlayerCard />
+          </div>
+          <div>
+            <span className="label-mono">YOUR CARD</span>
+            <h2 className="lp-h2">Everything you are, on one card.</h2>
+            <p className="lp-lead" style={{ marginBottom: 22 }}>
+              One number up top, the five attributes that built it underneath, and the badge you're
+              closest to taking. Open it any morning and you know exactly where you stand and what's
+              slipping.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <span className="attr-chip">0–100 OVERALL</span>
+              <span className="attr-chip">5 ATTRIBUTES</span>
+              <span className="attr-chip">20 BADGES</span>
+            </div>
           </div>
         </div>
       </section>
