@@ -158,7 +158,15 @@ export default function Player({ nav }) {
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
         {quests.map((q) => (
-          <StatTile key={q.label} label={q.label} value={q.val} pct={q.pct} onClick={q.go} />
+          <StatTile
+            key={q.label}
+            label={q.label}
+            value={q.val}
+            pct={q.pct}
+            onClick={q.go}
+            empty={q.pct === 0}
+            emptyHint="TAP TO START"
+          />
         ))}
       </div>
 
@@ -177,8 +185,23 @@ export default function Player({ nav }) {
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
-        <StatTile label="Steps" value={stepsToday.toLocaleString()} pct={Math.min(100, (stepsToday / 12000) * 100)} note={`${Math.max(0, 12000 - stepsToday).toLocaleString()} TO TEN-K CLUB`} onClick={() => nav("rings")} />
-        <StatTile label="Recovery" value={`${waterToday.toFixed(1)}L`} note="TAP TO LOG →" onClick={() => nav("quick")} />
+        <StatTile
+          label="Steps"
+          value={stepsToday.toLocaleString()}
+          pct={Math.min(100, (stepsToday / 12000) * 100)}
+          note={`${Math.max(0, 12000 - stepsToday).toLocaleString()} TO TEN-K CLUB`}
+          onClick={() => nav("rings")}
+          empty={stepsToday === 0}
+          emptyHint="ADD TODAY'S STEPS →"
+        />
+        <StatTile
+          label="Recovery"
+          value={`${waterToday.toFixed(1)}L`}
+          note="TAP TO LOG →"
+          onClick={() => nav("quick")}
+          empty={waterToday === 0}
+          emptyHint="LOG WATER & SLEEP →"
+        />
       </div>
 
       <div className="label-mono" style={{ marginBottom: 8 }}>

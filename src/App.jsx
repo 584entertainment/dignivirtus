@@ -1,65 +1,43 @@
-import { useAppState, useAppDispatch } from "./engine/store.jsx";
-import TabBar from "./components/TabBar.jsx";
-import BaselineSurvey from "./screens/BaselineSurvey.jsx";
-import Player from "./screens/Player.jsx";
-import Badges from "./screens/Badges.jsx";
-import BadgeDetail from "./screens/BadgeDetail.jsx";
-import LiveLog from "./screens/LiveLog.jsx";
-import Movement from "./screens/Movement.jsx";
-import Recovery from "./screens/Recovery.jsx";
-import Crew from "./screens/Crew.jsx";
-import Profile from "./screens/Profile.jsx";
-import Unlock from "./screens/Unlock.jsx";
+import { useEffect } from "react";
+import { useRouter } from "./router.jsx";
+import { useAuth } from "./lib/auth.jsx";
+import Landing from "./screens/Landing.jsx";
+import SignUp from "./screens/SignUp.jsx";
+import LogIn from "./screens/LogIn.jsx";
+import GameApp from "./GameApp.jsx";
 
-const TAB_SCREENS = new Set(["player", "badges", "log", "crew"]);
+function Redirect({ to }) {
+  const { navigate } = useRouter();
+  useEffect(() => {
+    navigate(to, { replace: true });
+  }, [navigate, to]);
+  return null;
+}
 
 export default function App() {
-  const state = useAppState();
-  const dispatch = useAppDispatch();
+  const { path } = useRouter();
+  const { session, loading } = useAuth();
 
-  if (!state.onboarded) {
-    return <BaselineSurvey />;
-  }
+  // Avoid deciding anything until we know whether there's a session — otherwise a
+  // signed-in user hitting /app directly gets bounced to the login screen for a
+  // frame before being sent back.
+  if (loading) return null;
 
-  const nav = (screen, badgeId) => dispatch({ type: "NAV", screen, badgeId });
+  switch (path) {
+    case "/":
+      return <Landing />;
 
-  let screenView;
-  switch (state.screen) {
-    case "player":
-      screenView = <Player nav={nav} />;
-      break;
-    case "badges":
-      screenView = <Badges nav={nav} />;
-      break;
-    case "detail":
-      screenView = <BadgeDetail nav={nav} />;
-      break;
-    case "log":
-      screenView = <LiveLog nav={nav} />;
-      break;
-    case "rings":
-      screenView = <Movement nav={nav} />;
-      break;
-    case "quick":
-      screenView = <Recovery nav={nav} />;
-      break;
-    case "crew":
-      screenView = <Crew nav={nav} />;
-      break;
-    case "profile":
-      screenView = <Profile nav={nav} />;
-      break;
+    case "/signup":
+      return session ? <Redirect to="/app" /> : <SignUp />;
+
+    case "/login":
+      return session ? <Redirect to="/app" /> : <LogIn />;
+
+    case "/app":
+      return session ? <GameApp /> : <Redirect to="/login" />;
+
     default:
-      screenView = <Player nav={nav} />;
+      // Unknown path (GitHub Pages served 404.html) — send them somewhere real.
+      return <Redirect to="/" />;
   }
-
-  const pendingUnlock = state.unlockQueue[0];
-
-  return (
-    <div className="app-shell">
-      {screenView}
-      {TAB_SCREENS.has(state.screen) && <TabBar active={state.screen} onNav={nav} />}
-      {pendingUnlock && <Unlock unlock={pendingUnlock} nav={nav} />}
-    </div>
-  );
 }

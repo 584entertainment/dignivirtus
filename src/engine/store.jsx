@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useReducer } from "react";
+import { createContext, useContext, useReducer } from "react";
 import { BADGES } from "../data/badges.js";
 import { baselineFromAnswers } from "../data/survey.js";
-import { loadSave, writeSave } from "./persistence.js";
 import { eligibleTierIndex, ORDER } from "./badgeProgress.js";
 import { applyAttributeBump, maybeRollWeekSnapshot, computeAttributes } from "./overall.js";
 import { todayKey, daysAgo } from "./dateUtils.js";
@@ -91,6 +90,26 @@ function reducer(state, action) {
       next.lastOpenDate = today;
       return withSeasonPeak(next);
     }
+
+    // Replace local state with whatever came back from the cloud (or the offline
+    // cache). Transient UI fields are re-seeded from defaults so a synced payload
+    // can never drop someone onto a stale screen.
+    case "HYDRATE": {
+      const base = defaultState();
+      const merged = {
+        ...base,
+        ...action.state,
+        logs: { ...base.logs, ...(action.state?.logs || {}) },
+        screen: "player",
+        filter: "ALL",
+        activeBadgeId: "delt",
+        unlockQueue: [],
+      };
+      return reducer(merged, { type: "INIT", saved: merged });
+    }
+
+    case "RESET":
+      return defaultState();
 
     case "ANSWER_SURVEY":
       return { ...state, surveyAnswers: { ...state.surveyAnswers, [action.qId]: action.idx } };
@@ -192,14 +211,12 @@ const AppStateContext = createContext(null);
 const AppDispatchContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, null, () => {
-    const saved = loadSave();
-    return reducer(defaultState(), { type: "INIT", saved });
-  });
-
-  useEffect(() => {
-    writeSave(state);
-  }, [state]);
+  // Starts empty on purpose. The app is behind a login now, so real state arrives
+  // from Supabase (or the per-user offline cache) via <CloudSync/> once we know
+  // who is signed in — never from a shared browser-wide blob.
+  const [state, dispatch] = useReducer(reducer, null, () =>
+    reducer(defaultState(), { type: "INIT", saved: null }),
+  );
 
   return (
     <AppStateContext.Provider value={state}>

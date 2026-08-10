@@ -1,4 +1,6 @@
 import { useAppState, useAppDispatch } from "../engine/store.jsx";
+import { useAuth } from "../lib/auth.jsx";
+import { useRouter } from "../router.jsx";
 import { computeOverall, baselineOverall } from "../engine/overall.js";
 import { BAND_CURVE, bandForScore } from "../data/attributes.js";
 import { BADGES } from "../data/badges.js";
@@ -8,6 +10,8 @@ import { daysAgo } from "../engine/dateUtils.js";
 export default function Profile({ nav }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const { user, signOut } = useAuth();
+  const { navigate } = useRouter();
   const { overall, attrs, band } = computeOverall(state);
   const startedAt = baselineOverall(state);
   const days = state.onboardedAt ? daysAgo(state.onboardedAt) : 0;
@@ -140,6 +144,22 @@ export default function Profile({ nav }) {
       >
         RETAKE BASELINE SURVEY
       </button>
+
+      <button
+        onClick={async () => {
+          await signOut();
+          navigate("/", { replace: true });
+        }}
+        style={{ width: "100%", marginTop: 10, padding: 14, borderRadius: 999, border: "none", background: "transparent", color: "var(--text-tertiary)", fontWeight: 700, fontSize: 13 }}
+      >
+        LOG OUT
+      </button>
+
+      <p className="mono" style={{ fontSize: 10, color: "var(--text-tertiary)", textAlign: "center", marginTop: 18, lineHeight: 1.6 }}>
+        SIGNED IN AS {user?.email || "—"}
+        <br />
+        YOUR PROGRESS SAVES TO THE CLOUD AUTOMATICALLY
+      </p>
     </div>
   );
 }

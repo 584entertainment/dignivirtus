@@ -51,7 +51,7 @@ export default function Badges({ nav }) {
           <button
             key={b.id}
             onClick={() => nav("detail", b.id)}
-            className="card"
+            className="card badge-card"
             style={{
               position: "relative",
               overflow: "hidden",

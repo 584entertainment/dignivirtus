@@ -50,6 +50,39 @@ button:active {
   padding: 20px 18px 12px;
 }
 
+/* Re-keyed on every screen change in GameApp, so each view eases in rather than
+   snapping. Kept short — this sits in front of a workout, not a slideshow. */
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+}
+.screen-anim {
+  animation: screenIn 0.3s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-anim,
+  .pop-in,
+  .rise-in {
+    animation: none;
+  }
+  .sheen::after {
+    animation: none;
+  }
+}
+
+.badge-card {
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.badge-card:hover {
+  transform: translateY(-3px);
+}
+.badge-card:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
 .mono {
   font-family: var(--font-mono);
 }

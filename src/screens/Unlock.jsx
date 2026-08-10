@@ -39,15 +39,31 @@ export default function Unlock({ unlock, nav }) {
         background: "radial-gradient(circle at 50% 40%, rgba(232,132,60,.16), var(--bg-base) 70%)",
       }}
     >
+      {/* The burst is capped to the phone column and faded at the edges. Left
+          full-bleed it blows out to the full desktop width and drowns the text. */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "min(560px, 100%)",
+          backgroundImage: `url(${burstBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 40%",
+          opacity: 0.4,
+          mixBlendMode: "screen",
+          maskImage: "radial-gradient(ellipse 70% 55% at 50% 45%, #000 30%, transparent 78%)",
+          WebkitMaskImage: "radial-gradient(ellipse 70% 55% at 50% 45%, #000 30%, transparent 78%)",
+        }}
+      />
+      {/* Scrim so the copy always keeps contrast over the brightest part of the burst. */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `url(${burstBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center 40%",
-          opacity: 0.55,
-          mixBlendMode: "screen",
+          background: "radial-gradient(ellipse at 50% 52%, rgba(11,13,9,.72), rgba(11,13,9,.35) 60%, transparent)",
         }}
       />
       <div
