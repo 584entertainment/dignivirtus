@@ -48,8 +48,18 @@ public class HealthPlugin: CAPPlugin, CAPBridgedPlugin {
         let query = HKStatisticsQuery(quantityType: stepType,
                                       quantitySamplePredicate: predicate,
                                       options: .cumulativeSum) { _, stats, error in
-            if let error = error {
-                call.reject("Step query failed: \(error.localizedDescription)")
+            if let error = error as? HKError, error.code == .errorNoData {
+                // No samples yet today is a normal morning, not a failure.
+                call.resolve(["steps": 0])
+                return
+            }
+            if let error = error, stats?.sumQuantity() == nil {
+                // HealthKit also reports "no data available" as a plain NSError.
+                if (error as NSError).localizedDescription.lowercased().contains("no data") {
+                    call.resolve(["steps": 0])
+                } else {
+                    call.reject("Step query failed: \(error.localizedDescription)")
+                }
                 return
             }
             let steps = stats?.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0

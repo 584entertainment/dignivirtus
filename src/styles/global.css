@@ -11,6 +11,14 @@ body,
   height: 100%;
 }
 
+/* The app must never pan sideways — any accidental overflow stays clipped and
+   the layout sits centered without the user having to drag it there. */
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: radial-gradient(

@@ -16,7 +16,18 @@ import Unlock from "./screens/Unlock.jsx";
 import TierLost from "./screens/TierLost.jsx";
 import appIcon from "./assets/generated/app-icon.svg";
 
-const TAB_SCREENS = new Set(["player", "badges", "log", "crew"]);
+// Which tab lights up for each screen — sub-screens highlight their parent tab
+// so the bar can stay visible everywhere without ever looking "off".
+const TAB_FOR_SCREEN = {
+  player: "player",
+  rings: "player",
+  quick: "player",
+  profile: "player",
+  badges: "badges",
+  detail: "badges",
+  log: "log",
+  crew: "crew",
+};
 
 function Booting() {
   return (
@@ -122,7 +133,7 @@ export default function GameApp() {
   const pendingUnlock = ready && state.onboarded ? state.unlockQueue[0] : null;
   // A win outranks a loss: never show a demotion on top of a celebration.
   const pendingLoss = ready && state.onboarded && !pendingUnlock ? (state.lostQueue || [])[0] : null;
-  const showTabs = ready && state.onboarded && TAB_SCREENS.has(state.screen);
+  const showTabs = ready && state.onboarded;
 
   // Keyed by screen so the enter animation replays on every navigation.
   const keyedBody = (
@@ -135,7 +146,7 @@ export default function GameApp() {
     <div className="app-shell">
       <CloudSync onReady={onReady} />
       {keyedBody}
-      {showTabs && <TabBar active={state.screen} onNav={nav} />}
+      {showTabs && <TabBar active={TAB_FOR_SCREEN[state.screen] || "player"} onNav={nav} />}
       {pendingUnlock && <Unlock unlock={pendingUnlock} nav={nav} />}
       {pendingLoss && <TierLost loss={pendingLoss} nav={nav} />}
     </div>
