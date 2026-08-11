@@ -188,6 +188,28 @@ function reducer(state, action) {
       return settleBadges(next);
     }
 
+    // Sets a metric's total for today (replacing any earlier entries) rather than
+    // appending. Used by the Apple Health steps sync, which reports a running
+    // daily total — running it twice must not double-count.
+    case "SET_METRIC_TODAY": {
+      const today = todayKey();
+      const previous = (state.logs[action.metric] || [])
+        .filter((e) => e.date === today)
+        .reduce((a, e) => a + e.amount, 0);
+      const logs = {
+        ...state.logs,
+        [action.metric]: [
+          ...(state.logs[action.metric] || []).filter((e) => e.date !== today),
+          { date: today, amount: action.amount },
+        ],
+      };
+      let next = { ...state, logs };
+      if (action.attr && action.amount > previous) {
+        next = { ...next, ...applyAttributeBump(next, action.attr) };
+      }
+      return settleBadges(next);
+    }
+
     case "SET_RESTING_HR": {
       const entry = { date: todayKey(), amount: action.value };
       const logs = { ...state.logs, restingHR: [...state.logs.restingHR, entry] };

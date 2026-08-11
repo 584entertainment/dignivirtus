@@ -47,7 +47,9 @@ button:active {
 }
 
 .screen {
-  padding: 20px 18px 12px;
+  /* Installed on iPhone the app draws under the status bar (black-translucent),
+     so the clock/battery would sit on top of content without this inset. */
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 18px 12px;
 }
 
 /* Re-keyed on every screen change in GameApp, so each view eases in rather than

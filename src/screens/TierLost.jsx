@@ -28,7 +28,7 @@ export default function TierLost({ loss, nav }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
+        padding: "calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))",
         background: "radial-gradient(circle at 50% 40%, rgba(226,96,60,.13), var(--bg-base) 68%)",
       }}
     >

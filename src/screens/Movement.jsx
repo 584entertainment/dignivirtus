@@ -81,6 +81,37 @@ export default function Movement({ nav }) {
         </button>
       </div>
 
+      <div className="card" style={{ marginBottom: 18, border: "1px solid var(--border-volt)", background: "rgba(200,241,53,.04)" }}>
+        <div className="label-mono" style={{ marginBottom: 8 }}>
+          AUTO-TRACK WITH APPLE HEALTH
+        </div>
+        <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, margin: "0 0 10px" }}>
+          One two-minute setup and your steps log themselves every evening — no typing.
+        </p>
+        <ol style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.7, margin: 0, paddingLeft: 18 }}>
+          <li>
+            Open <strong style={{ color: "var(--text-primary)" }}>Shortcuts</strong> → Automation → New →{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Time of Day</strong> (e.g. 9:00 pm, daily, Run
+            Immediately)
+          </li>
+          <li>
+            Add <strong style={{ color: "var(--text-primary)" }}>Find Health Samples</strong> (type: Steps,
+            start date: Today), then <strong style={{ color: "var(--text-primary)" }}>Calculate Statistics</strong>{" "}
+            → Sum
+          </li>
+          <li>
+            Add <strong style={{ color: "var(--text-primary)" }}>Open URLs</strong> with{" "}
+            <span className="mono" style={{ color: "var(--volt)", fontSize: 11 }}>
+              dignivirtus.com/app?steps=
+            </span>
+            <span className="mono" style={{ fontSize: 11 }}>[Statistics Result]</span>
+          </li>
+        </ol>
+        <p className="mono" style={{ fontSize: 10, color: "var(--text-tertiary)", margin: "10px 0 0", lineHeight: 1.6 }}>
+          RUNS IN SAFARI, SO LOG IN THERE ONCE. RE-RUNS NEVER DOUBLE-COUNT.
+        </p>
+      </div>
+
       <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
         <MiniStat label="DISTANCE" value={`${distance.toFixed(1)} km`} note={distance > 0 ? "LOGGED TODAY" : "NONE YET"} noteColor="var(--good)" />
         <MiniStat label="ACTIVE" value={`${activeMinutes} min`} note="ZONE 2" noteColor="var(--text-tertiary)" />

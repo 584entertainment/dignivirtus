@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppState, useAppDispatch } from "./engine/store.jsx";
 import CloudSync from "./components/CloudSync.jsx";
 import TabBar from "./components/TabBar.jsx";
@@ -47,6 +47,19 @@ export default function GameApp() {
   const onReady = useCallback(() => setReady(true), []);
 
   const nav = (screen, badgeId) => dispatch({ type: "NAV", screen, badgeId });
+
+  // Consume a step count delivered by the Apple Health shortcut (?steps=NNNN),
+  // once the player's real state has loaded so it can't be lost to hydration.
+  useEffect(() => {
+    if (!ready || !state.onboarded) return;
+    const raw = sessionStorage.getItem("dv.pendingSteps");
+    if (raw == null) return;
+    sessionStorage.removeItem("dv.pendingSteps");
+    const n = Math.round(Number(raw));
+    if (Number.isFinite(n) && n > 0 && n < 200000) {
+      dispatch({ type: "SET_METRIC_TODAY", metric: "steps", amount: n, attr: "END" });
+    }
+  }, [ready, state.onboarded, dispatch]);
 
   let body;
   if (!ready) {

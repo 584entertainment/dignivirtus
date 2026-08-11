@@ -34,7 +34,7 @@ export default function Unlock({ unlock, nav }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
+        padding: "calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))",
         overflow: "hidden",
         background: "radial-gradient(circle at 50% 40%, rgba(232,132,60,.16), var(--bg-base) 70%)",
       }}

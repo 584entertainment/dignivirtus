@@ -38,6 +38,7 @@
   backdrop-filter: blur(14px);
   background: rgba(11, 13, 9, 0.72);
   border-bottom: 1px solid var(--border-faint);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 .lp-nav-inner {
   display: flex;
@@ -428,7 +429,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px 20px 60px;
+  padding: calc(30px + env(safe-area-inset-top, 0px)) 20px 60px;
 }
 .auth-card {
   width: 100%;
