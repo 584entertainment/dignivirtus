@@ -3,6 +3,7 @@ import { useAuth } from "../lib/auth.jsx";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
 import HeroMedia from "../components/marketing/HeroMedia.jsx";
 import PlayerCard from "../components/marketing/PlayerCard.jsx";
+import InstallApp from "../components/marketing/InstallApp.jsx";
 import { ATTRIBUTES } from "../data/attributes.js";
 import { BADGES } from "../data/badges.js";
 import { TIERS, RARITY } from "../data/tiers.js";
@@ -82,11 +83,12 @@ export default function Landing() {
               <button className="btn btn-primary btn-lg" onClick={() => navigate("/signup")}>
                 Get Started
               </button>
+              <InstallApp />
               <button className="btn btn-ghost btn-lg" onClick={() => navigate("/login")}>
                 I have an account
               </button>
             </div>
-            <p className="lp-note">FREE · NO CARD · TAKES ABOUT TWO MINUTES</p>
+            <p className="lp-note">FREE · NO CARD · NO APP STORE · TAKES ABOUT TWO MINUTES</p>
           </div>
 
           <HeroMedia />
