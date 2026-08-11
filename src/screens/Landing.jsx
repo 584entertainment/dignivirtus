@@ -84,9 +84,6 @@ export default function Landing() {
                 Get Started
               </button>
               <InstallApp />
-              <button className="btn btn-ghost btn-lg" onClick={() => navigate("/login")}>
-                I have an account
-              </button>
             </div>
             <p className="lp-note">FREE · NO CARD · NO APP STORE · TAKES ABOUT TWO MINUTES</p>
           </div>
