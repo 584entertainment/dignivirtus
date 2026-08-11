@@ -1,0 +1,8 @@
+{
+  "appId": "com.dignivirtus.app",
+  "appName": "Dignivirtus",
+  "webDir": "dist",
+  "packageClassList": [
+    "HealthPlugin"
+  ]
+}

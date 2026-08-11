@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { isNativeApp } from "./lib/nativeHealth.js";
 
 // A deliberately tiny router. GitHub Pages has no server, so `dist/404.html` is a
 // copy of `index.html` — GitHub serves it for any unknown path, the app boots, and
@@ -9,7 +10,11 @@ const RouterContext = createContext(null);
 
 function normalise(pathname) {
   const p = (pathname || "/").replace(/\/+$/, "");
-  return p === "" ? "/" : p;
+  const path = p === "" ? "/" : p;
+  // The installed native app is the product, not the marketing site — boot it
+  // straight into the game. (Auth still gates /app if there's no session.)
+  if (path === "/" && isNativeApp()) return "/app";
+  return path;
 }
 
 export function RouterProvider({ children }) {

@@ -11,6 +11,9 @@
     "deploy": "vite build && cp dist/index.html dist/404.html && gh-pages -d dist"
   },
   "dependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@supabase/supabase-js": "^2.112.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

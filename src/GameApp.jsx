@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAppState, useAppDispatch } from "./engine/store.jsx";
+import { isNativeApp, fetchNativeSteps } from "./lib/nativeHealth.js";
 import CloudSync from "./components/CloudSync.jsx";
 import TabBar from "./components/TabBar.jsx";
 import BaselineSurvey from "./screens/BaselineSurvey.jsx";
@@ -59,6 +60,30 @@ export default function GameApp() {
     if (Number.isFinite(n) && n > 0 && n < 200000) {
       dispatch({ type: "SET_METRIC_TODAY", metric: "steps", amount: n, attr: "END" });
     }
+  }, [ready, state.onboarded, dispatch]);
+
+  // Native app: pull today's steps from HealthKit on launch and every time the
+  // app comes back to the foreground. Fully automatic — no typing, no shortcut.
+  useEffect(() => {
+    if (!ready || !state.onboarded || !isNativeApp()) return;
+
+    let cancelled = false;
+    const sync = async () => {
+      const steps = await fetchNativeSteps();
+      if (!cancelled && steps != null && steps > 0) {
+        dispatch({ type: "SET_METRIC_TODAY", metric: "steps", amount: steps, attr: "END" });
+      }
+    };
+
+    sync();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") sync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [ready, state.onboarded, dispatch]);
 
   let body;

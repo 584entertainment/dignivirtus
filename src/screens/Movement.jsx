@@ -4,6 +4,7 @@ import { BADGE_MAP } from "../data/badges.js";
 import { computeBadgeView } from "../engine/badgeProgress.js";
 import { todayKey } from "../engine/dateUtils.js";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
+import { isNativeApp } from "../lib/nativeHealth.js";
 
 function sumToday(entries) {
   const t = todayKey();
@@ -81,6 +82,17 @@ export default function Movement({ nav }) {
         </button>
       </div>
 
+      {isNativeApp() ? (
+        <div className="card" style={{ marginBottom: 18, border: "1px solid var(--border-volt)", background: "rgba(200,241,53,.04)" }}>
+          <div className="label-mono" style={{ marginBottom: 8 }}>
+            SYNCED WITH APPLE HEALTH
+          </div>
+          <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+            Your steps flow in from the Health app automatically every time you open Dignivirtus —
+            nothing to log. If the number reads 0, allow step access in Settings → Privacy → Health.
+          </p>
+        </div>
+      ) : (
       <div className="card" style={{ marginBottom: 18, border: "1px solid var(--border-volt)", background: "rgba(200,241,53,.04)" }}>
         <div className="label-mono" style={{ marginBottom: 8 }}>
           AUTO-TRACK WITH APPLE HEALTH
@@ -111,6 +123,7 @@ export default function Movement({ nav }) {
           RUNS IN SAFARI, SO LOG IN THERE ONCE. RE-RUNS NEVER DOUBLE-COUNT.
         </p>
       </div>
+      )}
 
       <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
         <MiniStat label="DISTANCE" value={`${distance.toFixed(1)} km`} note={distance > 0 ? "LOGGED TODAY" : "NONE YET"} noteColor="var(--good)" />
