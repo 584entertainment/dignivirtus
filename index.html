@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0B0D09" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <title>Dignivirtus — You have an Overall. Now go earn it.</title>
     <meta
@@ -33,10 +37,17 @@
       href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-BDdDzwR_.js"></script>
+    <script type="module" crossorigin src="/assets/index-BQNjHBvB.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-C0QSpbeQ.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Registers the service worker that makes the app installable and
+      // able to open offline. Skipped in dev so hot reload stays clean.
+      if ("serviceWorker" in navigator && location.hostname !== "localhost") {
+        window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
+      }
+    </script>
   </body>
 </html>
