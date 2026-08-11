@@ -40,12 +40,12 @@ export const BADGES = [
   },
   {
     id: "tenk", shape: "rings", attr: "END", name: "Ten-K Club",
-    blurb: "Twelve thousand, day after day.",
+    blurb: "Ten thousand, day after day.",
     how: "Just walk. Steps come straight from your phone and watch, whichever counted more. The bar rises as your tier does.",
-    source: "WATCH", metric: "steps", unit: "DAYS PER MONTH", ladder: [8, 16, 26, 29, 30], dailyTarget: 12000,
+    source: "WATCH", metric: "steps", unit: "DAYS PER MONTH", ladder: [8, 16, 26, 29, 30], dailyTarget: 10000,
     reqs: [
-      { kind: "target", label: "Steps today", window: "today", target: 12000 },
-      { kind: "ladderCount", label: "Qualifying days this month", window: "month", dailyTarget: 12000 },
+      { kind: "target", label: "Steps today", window: "today", target: 10000 },
+      { kind: "ladderCount", label: "Qualifying days this month", window: "month", dailyTarget: 10000 },
     ],
   },
   {

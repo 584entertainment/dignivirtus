@@ -17,7 +17,7 @@ export default function Movement({ nav }) {
   const [stepsInput, setStepsInput] = useState("");
 
   const stepsToday = sumToday(state.logs.steps);
-  const pct = Math.min(100, (stepsToday / 12000) * 100);
+  const pct = Math.min(100, (stepsToday / 10000) * 100);
   const distance = sumToday(state.logs.gpsKm);
   const activeMinutes = sumToday(state.logs.zone2Minutes);
   const decaying = state.decayWarnings && state.lastActivity?.SPD && (Date.now() - new Date(state.lastActivity.SPD).getTime()) / 86400000 > 4;
@@ -48,7 +48,7 @@ export default function Movement({ nav }) {
           <div style={{ width: 172, height: 172, borderRadius: "50%", background: "var(--bg-base)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 38, fontWeight: 900 }}>{stepsToday.toLocaleString()}</span>
             <span className="mono" style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 4 }}>
-              OF 12,000 STEPS
+              OF 10,000 STEPS
             </span>
           </div>
         </div>

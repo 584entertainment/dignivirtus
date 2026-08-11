@@ -30,7 +30,7 @@ export default function Player({ nav }) {
   const setsToday = sumToday(state.logs.lateralDeltSets) + sumToday(state.logs.posteriorChainSets) + sumToday(state.logs.pressingSets);
 
   const quests = [
-    { label: "HIT 12K STEPS", val: `${stepsToday.toLocaleString()}`, pct: Math.min(100, (stepsToday / 12000) * 100), done: stepsToday >= 12000, go: () => nav("rings") },
+    { label: "HIT 10K STEPS", val: `${stepsToday.toLocaleString()}`, pct: Math.min(100, (stepsToday / 10000) * 100), done: stepsToday >= 10000, go: () => nav("rings") },
     { label: "DRINK 3.2 L", val: `${waterToday.toFixed(1)}L`, pct: Math.min(100, (waterToday / 3.2) * 100), done: waterToday >= 3.2, go: () => nav("quick") },
     { label: "LOG 5 SETS", val: `${setsToday}/5`, pct: Math.min(100, (setsToday / 5) * 100), done: setsToday >= 5, go: () => nav("log") },
   ];
@@ -225,8 +225,8 @@ export default function Player({ nav }) {
         <StatTile
           label="Steps"
           value={stepsToday.toLocaleString()}
-          pct={Math.min(100, (stepsToday / 12000) * 100)}
-          note={`${Math.max(0, 12000 - stepsToday).toLocaleString()} TO TEN-K CLUB`}
+          pct={Math.min(100, (stepsToday / 10000) * 100)}
+          note={`${Math.max(0, 10000 - stepsToday).toLocaleString()} TO TEN-K CLUB`}
           onClick={() => nav("rings")}
           empty={stepsToday === 0}
           emptyHint="ADD TODAY'S STEPS →"
