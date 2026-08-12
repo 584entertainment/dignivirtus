@@ -9,6 +9,8 @@ import AnimatedNumber from "../components/AnimatedNumber.jsx";
 import ProgressBar from "../components/ProgressBar.jsx";
 import StatTile from "../components/StatTile.jsx";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
+import { isNativeApp } from "../lib/nativeHealth.js";
+import { targetProgress } from "../lib/reminders.js";
 
 function sumToday(entries) {
   const t = todayKey();
@@ -27,7 +29,10 @@ export default function Player({ nav }) {
 
   const stepsToday = sumToday(state.logs.steps);
   const waterToday = sumToday(state.logs.water);
-  const setsToday = sumToday(state.logs.lateralDeltSets) + sumToday(state.logs.posteriorChainSets) + sumToday(state.logs.pressingSets);
+  const setsToday = [
+    "deltSets", "chestSets", "backSets", "armSets", "trapSets",
+    "gluteSets", "hamstringSets", "quadSets", "calfSets", "forearmSets",
+  ].reduce((a, k) => a + sumToday(state.logs[k]), 0);
 
   const quests = [
     { label: "HIT 10K STEPS", val: `${stepsToday.toLocaleString()}`, pct: Math.min(100, (stepsToday / 10000) * 100), done: stepsToday >= 10000, go: () => nav("rings") },
@@ -152,6 +157,29 @@ export default function Player({ nav }) {
           </span>
         </div>
       </div>
+
+      {(() => {
+        // Web fallback for the native reminder notifications: after midday,
+        // surface any daily target still under 50%.
+        if (isNativeApp() || new Date().getHours() < 12) return null;
+        const behind = targetProgress(state).filter((i) => i.pct < 50);
+        if (!behind.length) return null;
+        const worst = behind.sort((a, b) => a.pct - b.pct)[0];
+        return (
+          <div
+            className="card"
+            style={{ marginBottom: 18, border: "1px solid var(--border-volt)", background: "rgba(200,241,53,.06)" }}
+          >
+            <div className="mono" style={{ fontSize: 10, color: "var(--volt)", letterSpacing: "0.12em", marginBottom: 4 }}>
+              DAILY TARGET SLIPPING
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>
+              {worst.fmt(worst.current)} / {worst.fmt(worst.target)} {worst.label}
+              {behind.length > 1 ? ` — and ${behind.length - 1} more behind` : ""}
+            </div>
+          </div>
+        );
+      })()}
 
       {atRisk.length > 0 && (
         <button

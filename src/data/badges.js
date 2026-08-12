@@ -1,43 +1,82 @@
-// Names, blurbs, "how you build it" copy, ladders and units are ported verbatim from
-// design_handoff_fitness_overall/Overall v3 Volt.dc.html's BADGES const (final-intent copy).
-// The `reqs` shape is redesigned so progress is computed from real logged activity
-// (see engine/badgeProgress.js) instead of the prototype's hardcoded sample numbers.
+// Badge catalog v2. Strength is body-part specific (one badge per muscle group),
+// speed badges are distance-graded sprints (50m / 20m), and Macro Governor judges
+// calorie days against the player's own resting metabolic rate (see lib/nutrition.js).
+// The `reqs` shape is computed from real logged activity in engine/badgeProgress.js.
 
 export const BADGES = [
+  // ---- STRENGTH — one badge per body part ----
   {
-    id: "delt", shape: "wing", attr: "STR", name: "Deltoid Deadeye",
+    id: "delts", shape: "wing", attr: "STR", name: "Deltoid Deadeye",
     blurb: "Side delts, hammered every week without fail.",
-    how: "Log lateral raise, upright row or cable Y-raise sets. Only sets in the 8-20 rep range count, and a missed week resets the streak.",
-    source: "MANUAL LOG", metric: "lateralDeltSets", unit: "SETS PER WEEK", ladder: [6, 12, 20, 32, 50],
-    reqs: [
-      { kind: "ladder", label: "Lateral delt sets this week", window: "week" },
-      { kind: "streakWeeks", label: "Weeks unbroken", window: "week", target: 6, qualifyAt: 6 },
-    ],
+    how: "Log lateral raise, upright row or cable Y-raise sets from the delts log.",
+    source: "MANUAL LOG", metric: "deltSets", unit: "SETS PER WEEK", ladder: [6, 12, 20, 32, 50],
+    reqs: [{ kind: "ladder", label: "Delt sets this week", window: "week" }],
   },
   {
-    id: "hinge", shape: "hinge", attr: "STR", name: "Hinge Master",
-    blurb: "Posterior chain volume, week after week.",
-    how: "RDLs, good mornings, hip thrusts and back extensions feed it. Your watch judges hinge depth and throws out short reps.",
-    source: "MANUAL LOG", metric: "posteriorChainSets", unit: "SETS PER WEEK", ladder: [10, 18, 28, 42, 60],
-    reqs: [
-      { kind: "ladder", label: "Posterior chain sets this week", window: "week" },
-      { kind: "pr", label: "Top set over 1.5x bodyweight", metricFlag: "hingePR" },
-    ],
+    id: "chest", shape: "wedge", attr: "STR", name: "Plate Pressure",
+    blurb: "Pressing volume that moves the plates.",
+    how: "Bench press, incline press, dips and flyes feed it. Log each working set.",
+    source: "MANUAL LOG", metric: "chestSets", unit: "SETS PER WEEK", ladder: [8, 14, 22, 34, 50],
+    reqs: [{ kind: "ladder", label: "Chest sets this week", window: "week" }],
   },
   {
-    id: "grip", shape: "grip", attr: "STR", name: "Iron Grip",
-    blurb: "Hang until your forearms give out.",
-    how: "Dead hangs, farmer carries and any loaded static hold. Time accumulates across the week and resets Monday.",
-    source: "MANUAL LOG", metric: "hangSeconds", unit: "SECONDS PER WEEK", ladder: [120, 240, 420, 720, 1200],
-    reqs: [{ kind: "ladder", label: "Total hang time", window: "week", unit: "s" }],
+    id: "back", shape: "path", attr: "STR", name: "Wingspan Warden",
+    blurb: "Rows and pulls, week after week.",
+    how: "Pull-ups, rows, pulldowns and pullovers. Log each working set.",
+    source: "MANUAL LOG", metric: "backSets", unit: "SETS PER WEEK", ladder: [8, 14, 22, 34, 50],
+    reqs: [{ kind: "ladder", label: "Back sets this week", window: "week" }],
   },
   {
-    id: "press", shape: "wedge", attr: "STR", name: "Press Authority",
-    blurb: "Strict pressing volume, no leg drive.",
-    how: "Bench, overhead press and dips feed it. Only sets logged within two reps of failure count toward volume.",
-    source: "MANUAL LOG", metric: "pressingSets", unit: "SETS PER WEEK", ladder: [8, 14, 22, 34, 50],
-    reqs: [{ kind: "ladder", label: "Pressing sets this week", window: "week" }],
+    id: "arms", shape: "arc", attr: "STR", name: "Curl Corridor",
+    blurb: "Biceps and triceps, isolated and honest.",
+    how: "Curls, extensions, pushdowns and skullcrushers. Log each working set.",
+    source: "MANUAL LOG", metric: "armSets", unit: "SETS PER WEEK", ladder: [6, 12, 20, 32, 50],
+    reqs: [{ kind: "ladder", label: "Arm sets this week", window: "week" }],
   },
+  {
+    id: "traps", shape: "dial", attr: "STR", name: "Yoke Broker",
+    blurb: "The neckline that fills a doorway.",
+    how: "Shrugs, high pulls and carries. Log each working set.",
+    source: "MANUAL LOG", metric: "trapSets", unit: "SETS PER WEEK", ladder: [4, 8, 14, 22, 36],
+    reqs: [{ kind: "ladder", label: "Trap sets this week", window: "week" }],
+  },
+  {
+    id: "glutes", shape: "hinge", attr: "STR", name: "Hinge Master",
+    blurb: "Glute volume, week after week.",
+    how: "Hip thrusts, glute bridges and kickbacks feed it. Log each working set.",
+    source: "MANUAL LOG", metric: "gluteSets", unit: "SETS PER WEEK", ladder: [6, 12, 20, 32, 50],
+    reqs: [{ kind: "ladder", label: "Glute sets this week", window: "week" }],
+  },
+  {
+    id: "hams", shape: "crescent", attr: "STR", name: "Posterior Physics",
+    blurb: "Hamstrings built with intent.",
+    how: "RDLs, leg curls, good mornings and Nordic drops. Log each working set.",
+    source: "MANUAL LOG", metric: "hamstringSets", unit: "SETS PER WEEK", ladder: [6, 10, 16, 26, 40],
+    reqs: [{ kind: "ladder", label: "Hamstring sets this week", window: "week" }],
+  },
+  {
+    id: "quads", shape: "zone", attr: "STR", name: "Quad Quarry",
+    blurb: "Squat-pattern volume, mined weekly.",
+    how: "Squats, leg press, lunges and leg extensions. Log each working set.",
+    source: "MANUAL LOG", metric: "quadSets", unit: "SETS PER WEEK", ladder: [6, 12, 20, 32, 50],
+    reqs: [{ kind: "ladder", label: "Quad sets this week", window: "week" }],
+  },
+  {
+    id: "calves", shape: "bolt", attr: "STR", name: "Ankle Cannons",
+    blurb: "Calves that answer every rep.",
+    how: "Standing and seated calf raises, full stretch at the bottom. Log each working set.",
+    source: "MANUAL LOG", metric: "calfSets", unit: "SETS PER WEEK", ladder: [6, 12, 20, 32, 50],
+    reqs: [{ kind: "ladder", label: "Calf sets this week", window: "week" }],
+  },
+  {
+    id: "forearms", shape: "grip", attr: "STR", name: "Iron Grip",
+    blurb: "Forearms and grip that never give out.",
+    how: "Wrist curls, dead hangs, farmer carries and heavy holds. Log each working set.",
+    source: "MANUAL LOG", metric: "forearmSets", unit: "SETS PER WEEK", ladder: [4, 8, 14, 22, 36],
+    reqs: [{ kind: "ladder", label: "Forearm sets this week", window: "week" }],
+  },
+
+  // ---- ENDURANCE ----
   {
     id: "tenk", shape: "rings", attr: "END", name: "Ten-K Club",
     blurb: "Ten thousand, day after day.",
@@ -51,7 +90,7 @@ export const BADGES = [
   {
     id: "haul", shape: "path", attr: "END", name: "Long Hauler",
     blurb: "Distance under your own power.",
-    how: "Walk, run or hike. GPS distance only, so treadmill miles feed Endurance but never this badge.",
+    how: "Walk, run or hike with the Run tracker. GPS distance only, so treadmill miles feed Endurance but never this badge.",
     source: "GPS", metric: "gpsKm", unit: "KM PER WEEK", ladder: [18, 28, 40, 65, 100],
     reqs: [{ kind: "ladder", label: "Kilometres this week", window: "week", unit: "km" }],
   },
@@ -69,6 +108,8 @@ export const BADGES = [
     source: "WATCH", metric: "floors", unit: "FLOORS PER WEEK", ladder: [40, 80, 140, 220, 350],
     reqs: [{ kind: "ladder", label: "Floors this week", window: "week" }],
   },
+
+  // ---- MOBILITY ----
   {
     id: "hip", shape: "arc", attr: "MOB", name: "Hip Opener",
     blurb: "Range you can actually use.",
@@ -97,6 +138,8 @@ export const BADGES = [
     source: "MANUAL LOG", metric: "foldHoldSeconds", unit: "SECONDS PER WEEK", ladder: [180, 320, 540, 900, 1500],
     reqs: [{ kind: "ladder", label: "Fold hold time", window: "week", unit: "s" }],
   },
+
+  // ---- RECOVERY ----
   {
     id: "hydro", shape: "drop", attr: "REC", name: "Hydro Engine",
     blurb: "Three point two litres, every single day.",
@@ -125,39 +168,27 @@ export const BADGES = [
     reqs: [{ kind: "ladder", label: "True rest days this month", window: "month" }],
   },
   {
-    id: "idle", shape: "zone", attr: "REC", name: "Idle Engine",
-    blurb: "A resting heart rate that keeps dropping.",
-    how: "Weekly average resting heart rate from your watch. Tiers are personal: each one is beats below your own starting baseline.",
-    source: "WATCH", metric: "restingHR", unit: "BPM BELOW BASELINE", ladder: [2, 5, 9, 14, 20],
-    reqs: [{ kind: "baselineDelta", label: "Beats below baseline" }],
+    id: "fuel", shape: "rings", attr: "REC", name: "Macro Governor",
+    blurb: "Calorie days kept on your own terms.",
+    how: "Log what you eat. A day counts when your total lands on the right side of your resting metabolic rate — under it on a cut, over it on a build.",
+    source: "MANUAL LOG", metric: "calories", unit: "DAYS PER MONTH", ladder: [6, 12, 18, 24, 28],
+    reqs: [{ kind: "calorieDays", label: "On-target days this month", window: "month" }],
   },
+
+  // ---- SPEED ----
   {
     id: "sprint", shape: "bolt", attr: "SPD", name: "Sprint Merchant",
-    blurb: "Top-end speed, on purpose.",
-    how: "Hit start, run hard, hit stop. GPS grades every effort against your fastest recorded split, so your own progress raises the bar.",
-    source: "GPS", metric: "sprintsOver90", unit: "SPRINTS PER MONTH", ladder: [6, 12, 20, 32, 50],
-    reqs: [{ kind: "ladder", label: "Sprints above 90% top speed", window: "month" }],
-  },
-  {
-    id: "sub9", shape: "dial", attr: "SPD", name: "Sub-Nine Split",
-    blurb: "One kilometre, under four fifteen.",
-    how: "Any outdoor kilometre logged with GPS. Only your best split of the week counts toward the tier.",
-    source: "GPS", metric: "best1kmSplit", unit: "MIN PER KM", ladder: [5.3, 4.7, 4.15, 3.5, 3.05], invert: true,
-    reqs: [{ kind: "best", label: "Best 1km split", window: "week", invert: true }],
-  },
-  {
-    id: "split", shape: "bolt", attr: "SPD", name: "Negative Split",
-    blurb: "Finish faster than you started.",
-    how: "GPS runs where the second half beats the first. Only runs over 3 km qualify.",
-    source: "GPS", metric: "negSplitRuns", unit: "RUNS PER MONTH", ladder: [2, 4, 8, 14, 22],
-    reqs: [{ kind: "ladder", label: "Negative-split runs this month", window: "month" }],
+    blurb: "Fifty metres, full send.",
+    how: "Start a tracked run and open up. Any max-effort burst that covers 50 metres or more counts.",
+    source: "GPS", metric: "sprints50m", unit: "SPRINTS PER MONTH", ladder: [4, 8, 14, 24, 40],
+    reqs: [{ kind: "ladder", label: "50m sprints this month", window: "month" }],
   },
   {
     id: "start", shape: "arc", attr: "SPD", name: "Flying Start",
-    blurb: "First forty metres, full send.",
-    how: "Standing-start accelerations graded by GPS. Top speed has to arrive inside six seconds of go.",
-    source: "GPS", metric: "accelerations", unit: "STARTS PER MONTH", ladder: [4, 8, 14, 24, 40],
-    reqs: [{ kind: "ladder", label: "Graded accelerations this month", window: "month" }],
+    blurb: "First twenty metres, off the line.",
+    how: "Short accelerations graded by GPS — bursts that cover 20 metres at sprint speed count.",
+    source: "GPS", metric: "sprints20m", unit: "STARTS PER MONTH", ladder: [6, 12, 20, 32, 50],
+    reqs: [{ kind: "ladder", label: "20m starts this month", window: "month" }],
   },
 ];
 

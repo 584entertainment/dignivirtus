@@ -3,6 +3,7 @@ import { useAppState, useAppDispatch } from "../engine/store.jsx";
 import { BADGE_MAP } from "../data/badges.js";
 import { computeBadgeView } from "../engine/badgeProgress.js";
 import { todayKey, addDaysKey } from "../engine/dateUtils.js";
+import { formatVolume } from "../lib/units.js";
 
 function sumToday(entries) {
   const t = todayKey();
@@ -42,16 +43,24 @@ export default function Recovery({ nav }) {
           WATER
         </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 14 }}>
-          <span style={{ fontSize: 32, fontWeight: 900 }}>{waterToday.toFixed(2)}L</span>
-          <span className="mono" style={{ fontSize: 13, color: "var(--text-tertiary)" }}>
-            / 3.2L
-          </span>
+          {(() => {
+            const cur = formatVolume(waterToday, state.units, 2);
+            const goal = formatVolume(3.2, state.units);
+            return (
+              <>
+                <span style={{ fontSize: 32, fontWeight: 900 }}>{cur.value}{cur.suffix}</span>
+                <span className="mono" style={{ fontSize: 13, color: "var(--text-tertiary)" }}>
+                  / {goal.value}{goal.suffix}
+                </span>
+              </>
+            );
+          })()}
         </div>
         <button
           onClick={() => dispatch({ type: "LOG_METRIC", metric: "water", amount: 0.25, attr: "REC" })}
           style={{ padding: "10px 20px", borderRadius: 999, border: "none", background: "var(--volt)", color: "#141906", fontWeight: 800, marginBottom: 14 }}
         >
-          +250ml
+          {state.units === "imperial" ? "+8oz" : "+250ml"}
         </button>
         <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
           {Array.from({ length: 13 }, (_, i) => (

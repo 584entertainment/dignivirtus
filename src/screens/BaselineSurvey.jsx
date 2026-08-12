@@ -26,9 +26,11 @@ function Chip({ active, onClick, children }) {
 export default function BaselineSurvey() {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const { surveyAnswers, age, weight } = state;
+  const { surveyAnswers, age, weight, heightCm, sex, exactAge, calorieGoal } = state;
 
-  const allAnswered = SURVEY.every((q) => surveyAnswers[q.id] != null) && age != null;
+  const allAnswered =
+    SURVEY.every((q) => surveyAnswers[q.id] != null) &&
+    age != null && heightCm != null && sex != null && exactAge != null && calorieGoal != null;
   const preview = allAnswered ? baselineFromAnswers(surveyAnswers) : null;
 
   return (
@@ -70,9 +72,63 @@ export default function BaselineSurvey() {
           </button>
         </div>
         <p className="mono" style={{ fontSize: 10, color: "var(--text-tertiary)", marginTop: 8, lineHeight: 1.5 }}>
-          AGE AND WEIGHT DO NOT SCORE YOU. THEY SET STRENGTH TARGETS RELATIVE TO BODYWEIGHT AND THE PACE
-          BANDS SPEED BADGES JUDGE YOU AGAINST.
+          THESE NUMBERS NEVER SCORE YOU. HEIGHT, WEIGHT, AGE AND SEX SET YOUR RESTING METABOLIC RATE —
+          THE BAR YOUR CALORIE BADGE IS JUDGED AGAINST.
         </p>
+      </div>
+
+      <div style={{ marginBottom: 22 }}>
+        <div className="mono" style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8 }}>
+          HEIGHT (CM) &amp; EXACT AGE
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <input
+            type="number"
+            value={heightCm ?? ""}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              dispatch({ type: "SET_PROFILE_FIELD", field: "heightCm", value: v > 0 ? v : null });
+            }}
+            placeholder="Height in cm (e.g. 180)"
+            style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: 12, color: "var(--text-primary)" }}
+          />
+          <input
+            type="number"
+            value={exactAge ?? ""}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              dispatch({ type: "SET_PROFILE_FIELD", field: "exactAge", value: v > 0 ? v : null });
+            }}
+            placeholder="Age (e.g. 31)"
+            style={{ width: 110, background: "var(--surface-2)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: 12, color: "var(--text-primary)" }}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 22 }}>
+        <div className="mono" style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8 }}>
+          SEX (FOR THE METABOLIC FORMULA)
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[["male", "Male"], ["female", "Female"]].map(([val, label]) => (
+            <Chip key={val} active={sex === val} onClick={() => dispatch({ type: "SET_PROFILE_FIELD", field: "sex", value: val })}>
+              {label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 28 }}>
+        <div className="mono" style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8 }}>
+          CALORIE GOAL
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[["cut", "Cut — eat below my rate"], ["build", "Build — eat above it"]].map(([val, label]) => (
+            <Chip key={val} active={calorieGoal === val} onClick={() => dispatch({ type: "SET_PROFILE_FIELD", field: "calorieGoal", value: val })}>
+              {label}
+            </Chip>
+          ))}
+        </div>
       </div>
 
       {SURVEY.map((q) => (

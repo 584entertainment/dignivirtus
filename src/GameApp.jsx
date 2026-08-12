@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAppState, useAppDispatch } from "./engine/store.jsx";
+import { App as CapApp } from "@capacitor/app";
 import { isNativeApp, fetchNativeSteps } from "./lib/nativeHealth.js";
+import { rescheduleReminders } from "./lib/reminders.js";
 import CloudSync from "./components/CloudSync.jsx";
 import TabBar from "./components/TabBar.jsx";
 import BaselineSurvey from "./screens/BaselineSurvey.jsx";
@@ -8,6 +10,9 @@ import Player from "./screens/Player.jsx";
 import Badges from "./screens/Badges.jsx";
 import BadgeDetail from "./screens/BadgeDetail.jsx";
 import LiveLog from "./screens/LiveLog.jsx";
+import LogChooser from "./screens/LogChooser.jsx";
+import Fuel from "./screens/Fuel.jsx";
+import Run from "./screens/Run.jsx";
 import Movement from "./screens/Movement.jsx";
 import Recovery from "./screens/Recovery.jsx";
 import Crew from "./screens/Crew.jsx";
@@ -26,6 +31,9 @@ const TAB_FOR_SCREEN = {
   badges: "badges",
   detail: "badges",
   log: "log",
+  livelog: "log",
+  fuel: "log",
+  run: "player",
   crew: "crew",
 };
 
@@ -58,7 +66,7 @@ export default function GameApp() {
   const [ready, setReady] = useState(false);
   const onReady = useCallback(() => setReady(true), []);
 
-  const nav = (screen, badgeId) => dispatch({ type: "NAV", screen, badgeId });
+  const nav = (screen, badgeId, part) => dispatch({ type: "NAV", screen, badgeId, part });
 
   // Consume a step count delivered by the Apple Health shortcut (?steps=NNNN),
   // once the player's real state has loaded so it can't be lost to hydration.
@@ -97,6 +105,19 @@ export default function GameApp() {
     };
   }, [ready, state.onboarded, dispatch]);
 
+  // Native: keep the midday/evening reminder notifications in sync with today's
+  // progress — refreshed on launch and every time the app is backgrounded.
+  useEffect(() => {
+    if (!ready || !state.onboarded || !isNativeApp()) return;
+    rescheduleReminders(state);
+    const sub = CapApp.addListener("appStateChange", ({ isActive }) => {
+      if (!isActive) rescheduleReminders(state);
+    });
+    return () => {
+      sub.then((s) => s.remove());
+    };
+  }, [ready, state.onboarded, state.logs, state.dailyTargets]);
+
   let body;
   if (!ready) {
     body = <Booting />;
@@ -111,7 +132,16 @@ export default function GameApp() {
         body = <BadgeDetail nav={nav} />;
         break;
       case "log":
+        body = <LogChooser nav={nav} />;
+        break;
+      case "livelog":
         body = <LiveLog nav={nav} />;
+        break;
+      case "fuel":
+        body = <Fuel nav={nav} />;
+        break;
+      case "run":
+        body = <Run nav={nav} />;
         break;
       case "rings":
         body = <Movement nav={nav} />;

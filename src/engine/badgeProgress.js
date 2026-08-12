@@ -1,7 +1,8 @@
 import { ORDER, TIERS, RARITY, GLOWS } from "../data/tiers.js";
 import { weekKey, monthKey, dayKey, todayKey, daysAgo, addDaysKey } from "./dateUtils.js";
+import { onTargetDayCount } from "../lib/nutrition.js";
 
-const PRIMARY_KINDS = ["ladder", "ladderCount", "ladderStreakDays", "best", "baselineDelta"];
+const PRIMARY_KINDS = ["ladder", "ladderCount", "ladderStreakDays", "best", "baselineDelta", "calorieDays"];
 
 function windowEntries(entries, window) {
   if (!entries?.length) return [];
@@ -92,6 +93,7 @@ function primaryCurrentValue(req, badge, state) {
   if (req.kind === "ladder") return sumWindow(entries, req.window);
   if (req.kind === "ladderCount") return qualifyingDayCount(entries, req.window, req.dailyTarget);
   if (req.kind === "ladderStreakDays") return currentDayStreak(entries, req.dailyTarget);
+  if (req.kind === "calorieDays") return onTargetDayCount(windowEntries(entries, req.window), state, todayKey());
   if (req.kind === "best") {
     const v = bestInWindow(entries, req.window, true);
     return v == null ? Infinity : v;

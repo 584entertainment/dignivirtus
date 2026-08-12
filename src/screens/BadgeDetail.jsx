@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAppState, useAppDispatch } from "../engine/store.jsx";
 import { BADGE_MAP } from "../data/badges.js";
 import { QUICK_LOG } from "../data/quickLog.js";
@@ -10,10 +9,7 @@ import ProgressBar from "../components/ProgressBar.jsx";
 export default function BadgeDetail({ nav }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const [splitInput, setSplitInput] = useState("");
-  const [hrInput, setHrInput] = useState("");
-
-  const badge = BADGE_MAP[state.activeBadgeId] || BADGE_MAP.delt;
+  const badge = BADGE_MAP[state.activeBadgeId] || BADGE_MAP.delts;
   const view = computeBadgeView(badge, state);
   const quick = QUICK_LOG[badge.metric];
 
@@ -70,64 +66,6 @@ export default function BadgeDetail({ nav }) {
           style={{ width: "100%", marginBottom: 22, padding: 14, borderRadius: 999, border: "1px solid var(--border-volt)", background: "rgba(200,241,53,.12)", color: "var(--volt)", fontWeight: 700, fontSize: 14 }}
         >
           {quick.label}
-        </button>
-      )}
-
-      {badge.metric === "restingHR" && (
-        <div className="card" style={{ marginBottom: 22, display: "flex", gap: 10, alignItems: "center" }}>
-          <input
-            type="number"
-            value={hrInput}
-            onChange={(e) => setHrInput(e.target.value)}
-            placeholder="Resting HR (bpm)"
-            style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: 10, color: "var(--text-primary)" }}
-          />
-          <button
-            onClick={() => {
-              const v = Number(hrInput);
-              if (v > 0) {
-                dispatch({ type: "SET_RESTING_HR", value: v });
-                setHrInput("");
-              }
-            }}
-            style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "var(--volt)", color: "#141906", fontWeight: 700 }}
-          >
-            Log
-          </button>
-        </div>
-      )}
-
-      {badge.metric === "best1kmSplit" && (
-        <div className="card" style={{ marginBottom: 22, display: "flex", gap: 10, alignItems: "center" }}>
-          <input
-            type="number"
-            step="0.01"
-            value={splitInput}
-            onChange={(e) => setSplitInput(e.target.value)}
-            placeholder="Split (min/km, e.g. 4.5)"
-            style={{ flex: 1, background: "var(--surface-2)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: 10, color: "var(--text-primary)" }}
-          />
-          <button
-            onClick={() => {
-              const v = Number(splitInput);
-              if (v > 0) {
-                dispatch({ type: "LOG_METRIC", metric: "best1kmSplit", amount: v, attr: "SPD" });
-                setSplitInput("");
-              }
-            }}
-            style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "var(--volt)", color: "#141906", fontWeight: 700 }}
-          >
-            Log
-          </button>
-        </div>
-      )}
-
-      {badge.id === "hinge" && !state.flags.hingePR && (
-        <button
-          onClick={() => dispatch({ type: "SET_FLAG", flag: "hingePR", value: true })}
-          style={{ width: "100%", marginBottom: 22, padding: 12, borderRadius: 999, border: "1px solid var(--border-soft)", background: "var(--surface-2)", color: "var(--text-primary)", fontWeight: 600, fontSize: 13 }}
-        >
-          Log a top set over 1.5× bodyweight
         </button>
       )}
 

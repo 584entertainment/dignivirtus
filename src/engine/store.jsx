@@ -5,26 +5,26 @@ import { eligibleTierIndex, ORDER } from "./badgeProgress.js";
 import { applyAttributeBump, maybeRollWeekSnapshot, computeAttributes } from "./overall.js";
 import { applyRegression } from "./regression.js";
 import { todayKey, daysAgo } from "./dateUtils.js";
+import { emptyLogs, migrateState } from "./migrate.js";
 
-const METRIC_LOG_KEYS = [
-  "lateralDeltSets", "posteriorChainSets", "hangSeconds", "pressingSets",
-  "steps", "gpsKm", "zone2Minutes", "floors",
-  "hipMobilityMinutes", "deepSquatHolds", "rotationMinutes", "foldHoldSeconds",
-  "water", "sleepHours", "restDays", "restingHR",
-  "sprintsOver90", "best1kmSplit", "negSplitRuns", "accelerations",
-];
-
-function emptyLogs() {
-  return Object.fromEntries(METRIC_LOG_KEYS.map((k) => [k, []]));
-}
+export { migrateState };
+import { restingMetabolicRate } from "../lib/nutrition.js";
 
 function defaultState() {
   return {
+    schemaVersion: 2,
     onboarded: false,
     name: "Jordan Diaz",
     avatarInitials: "JD",
     age: null,
     weight: 78,
+    units: "metric",
+    heightCm: null,
+    sex: null,
+    exactAge: null,
+    calorieGoal: null,
+    rmr: null,
+    dailyTargets: { steps: 10000, water: 3.2, sets: 10, calories: null },
     surveyAnswers: {},
     attributeBase: { STR: 40, END: 40, MOB: 40, REC: 40, SPD: 40 },
     attributeBumps: {},
@@ -42,7 +42,8 @@ function defaultState() {
     lastOpenDate: null,
     screen: "player",
     filter: "ALL",
-    activeBadgeId: "delt",
+    activeBadgeId: "delts",
+    activePart: null,
     unlockQueue: [],
     onboardedAt: null,
     lastUnlock: null,
@@ -102,7 +103,7 @@ function computeAttributesAndOverall(state) {
 function reducer(state, action) {
   switch (action.type) {
     case "INIT": {
-      let next = { ...defaultState(), ...action.saved };
+      let next = { ...defaultState(), ...migrateState(action.saved) };
       next = { ...next, ...maybeRollWeekSnapshot(next) };
       const today = todayKey();
       if (next.lastOpenDate) {
@@ -124,13 +125,14 @@ function reducer(state, action) {
     // can never drop someone onto a stale screen.
     case "HYDRATE": {
       const base = defaultState();
+      const migrated = migrateState(action.state) || {};
       const merged = {
         ...base,
-        ...action.state,
-        logs: { ...base.logs, ...(action.state?.logs || {}) },
+        ...migrated,
+        logs: { ...base.logs, ...(migrated.logs || {}) },
         screen: "player",
         filter: "ALL",
-        activeBadgeId: "delt",
+        activeBadgeId: "delts",
         unlockQueue: [],
       };
       return reducer(merged, { type: "INIT", saved: merged });
@@ -145,14 +147,38 @@ function reducer(state, action) {
     case "SET_AGE":
       return { ...state, age: action.idx };
 
+    case "SET_PROFILE_FIELD": {
+      if (!["heightCm", "sex", "exactAge", "calorieGoal"].includes(action.field)) return state;
+      return { ...state, [action.field]: action.value };
+    }
+
+    case "RECALC_RMR":
+      return {
+        ...state,
+        rmr: restingMetabolicRate({
+          weightKg: state.weight,
+          heightCm: state.heightCm,
+          age: state.exactAge,
+          sex: state.sex,
+        }),
+        ...(action.calorieGoal ? { calorieGoal: action.calorieGoal } : {}),
+      };
+
     case "BUMP_WEIGHT":
       return { ...state, weight: Math.max(40, Math.min(180, state.weight + action.delta)) };
 
     case "COMPLETE_SURVEY": {
       const { split } = baselineFromAnswers(state.surveyAnswers);
       const attributeBase = Object.fromEntries(split.map((s) => [s.key, s.val]));
+      const rmr = restingMetabolicRate({
+        weightKg: state.weight,
+        heightCm: state.heightCm,
+        age: state.exactAge,
+        sex: state.sex,
+      });
       const next = {
         ...state,
+        rmr,
         attributeBase,
         attributeBumps: {},
         lastActivity: {},
@@ -169,7 +195,18 @@ function reducer(state, action) {
       return { ...state, onboarded: false, surveyAnswers: {} };
 
     case "NAV":
-      return { ...state, screen: action.screen, ...(action.badgeId ? { activeBadgeId: action.badgeId } : {}) };
+      return {
+        ...state,
+        screen: action.screen,
+        ...(action.badgeId ? { activeBadgeId: action.badgeId } : {}),
+        ...(action.part ? { activePart: action.part } : {}),
+      };
+
+    case "SET_UNITS":
+      return { ...state, units: action.value };
+
+    case "SET_DAILY_TARGETS":
+      return { ...state, dailyTargets: { ...state.dailyTargets, ...action.targets } };
 
     case "SET_FILTER":
       return { ...state, filter: action.filter };

@@ -1,6 +1,7 @@
 import { ORDER } from "../data/tiers.js";
 import { BADGES } from "../data/badges.js";
 import { todayKey, daysAgo } from "./dateUtils.js";
+import { onTargetDayCount } from "../lib/nutrition.js";
 
 // Tiers reflect *current* ability, so holding one means still performing at the
 // level that earned it. Fall below for long enough and the badge drops a tier.
@@ -34,6 +35,11 @@ export function trailingValue(badge, state) {
   const entries = state.logs?.[badge.metric] || [];
   const window = maintenanceWindow(badge);
   const recent = trailingEntries(entries, window);
+
+  if (badge.id === "fuel") {
+    // Macro Governor counts on-target calorie days, not raw kcal totals.
+    return onTargetDayCount(recent, state, todayKey());
+  }
 
   if (badge.invert) {
     if (!recent.length) return Infinity;

@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Dignivirtus reads your step count so your Endurance rating and step badges update automatically.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Dignivirtus uses your location during a tracked run to measure distance and detect sprints for your speed badges.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -5,6 +5,7 @@ import { computeBadgeView } from "../engine/badgeProgress.js";
 import { todayKey } from "../engine/dateUtils.js";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
 import { isNativeApp } from "../lib/nativeHealth.js";
+import { formatDistance } from "../lib/units.js";
 
 function sumToday(entries) {
   const t = todayKey();
@@ -24,8 +25,8 @@ export default function Movement({ nav }) {
 
   const sprintBadge = BADGE_MAP.sprint;
   const sprintView = computeBadgeView(sprintBadge, state);
-  const sprintCount = sumToday(state.logs.sprintsOver90) + (state.logs.sprintsOver90 || []).length; // display total logged
-  const segmentsFilled = Math.min(6, (state.logs.sprintsOver90 || []).length);
+  const sprintCount = sumToday(state.logs.sprints50m) + (state.logs.sprints50m || []).length; // display total logged
+  const segmentsFilled = Math.min(6, (state.logs.sprints50m || []).length);
 
   return (
     <div className="screen" style={{ paddingBottom: 24 }}>
@@ -126,7 +127,12 @@ export default function Movement({ nav }) {
       )}
 
       <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
-        <MiniStat label="DISTANCE" value={`${distance.toFixed(1)} km`} note={distance > 0 ? "LOGGED TODAY" : "NONE YET"} noteColor="var(--good)" />
+        <MiniStat
+          label="DISTANCE"
+          value={(() => { const d = formatDistance(distance, state.units); return `${d.value} ${d.suffix}`; })()}
+          note={distance > 0 ? "LOGGED TODAY" : "NONE YET"}
+          noteColor="var(--good)"
+        />
         <MiniStat label="ACTIVE" value={`${activeMinutes} min`} note="ZONE 2" noteColor="var(--text-tertiary)" />
         <MiniStat label="SPEED" value={state.decayWarnings ? "TRACKED" : "—"} note={decaying ? "STALE" : "ON TRACK"} noteColor={decaying ? "var(--warn)" : "var(--good)"} />
       </div>
@@ -144,7 +150,7 @@ export default function Movement({ nav }) {
           </div>
         </div>
         <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px" }}>
-          Hit start, run hard, hit stop. Every sprint above 90% of your top speed counts toward Sprint Merchant.
+          Hit start, run hard, hit stop. Every max-effort burst over 50 metres counts toward Sprint Merchant.
         </p>
         <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
           {Array.from({ length: 6 }, (_, i) => (
@@ -152,10 +158,10 @@ export default function Movement({ nav }) {
           ))}
         </div>
         <button
-          onClick={() => dispatch({ type: "LOG_METRIC", metric: "sprintsOver90", amount: 1, attr: "SPD" })}
+          onClick={() => nav("run")}
           style={{ width: "100%", padding: 13, borderRadius: 999, border: "none", background: "var(--volt)", color: "#141906", fontWeight: 800 }}
         >
-          START A TIMED SPRINT
+          START A TRACKED RUN
         </button>
       </div>
     </div>

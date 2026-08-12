@@ -21,7 +21,7 @@ export default function Profile({ nav }) {
   const goldPlus = badgeViews.filter((v) => ["gold", "hof", "legend"].includes(v.tier)).length;
 
   const stats = [
-    { label: "BADGES STARTED", value: `${started} / 20` },
+    { label: "BADGES STARTED", value: `${started} / ${BADGES.length}` },
     { label: "GOLD OR BETTER", value: String(goldPlus) },
     { label: "CURRENT STREAK", value: `${state.streak} d` },
     { label: "SEASON PEAK", value: String(state.seasonPeak || overall) },
@@ -101,6 +101,65 @@ export default function Profile({ nav }) {
             <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, margin: 0 }}>{a.how}</p>
           </div>
         ))}
+      </div>
+
+      <div className="label-mono" style={{ marginBottom: 10 }}>
+        DAILY TARGETS
+      </div>
+      <div className="card" style={{ marginBottom: 22, display: "flex", flexDirection: "column", gap: 12 }}>
+        {[
+          { key: "steps", label: "Steps", step: 500 },
+          { key: "water", label: state.units === "imperial" ? "Water (oz)" : "Water (L)", step: 0.1 },
+          { key: "sets", label: "Training sets", step: 1 },
+          { key: "calories", label: "Calories (kcal)", step: 50 },
+        ].map((t) => (
+          <div key={t.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="mono" style={{ fontSize: 12 }}>{t.label}</span>
+            <input
+              type="number"
+              step={t.step}
+              value={
+                t.key === "water" && state.units === "imperial"
+                  ? Math.round((state.dailyTargets?.water ?? 3.2) * 33.814)
+                  : state.dailyTargets?.[t.key] ?? ""
+              }
+              placeholder={t.key === "calories" ? String(state.rmr || "—") : ""}
+              onChange={(e) => {
+                let v = Number(e.target.value);
+                if (!Number.isFinite(v) || v < 0) return;
+                if (t.key === "water" && state.units === "imperial") v = v / 33.814;
+                dispatch({ type: "SET_DAILY_TARGETS", targets: { [t.key]: v || null } });
+              }}
+              style={{ width: 110, textAlign: "right", background: "var(--surface-2)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: 8, color: "var(--text-primary)" }}
+            />
+          </div>
+        ))}
+        <p className="mono" style={{ fontSize: 10, color: "var(--text-tertiary)", margin: 0, lineHeight: 1.5 }}>
+          THE APP NUDGES YOU AT MIDDAY AND EVENING IF A TARGET IS SLIPPING.
+        </p>
+      </div>
+
+      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <span className="mono" style={{ fontSize: 12 }}>Units</span>
+        <div style={{ display: "flex", gap: 6 }}>
+          {["metric", "imperial"].map((u) => (
+            <button
+              key={u}
+              onClick={() => dispatch({ type: "SET_UNITS", value: u })}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 999,
+                border: `1px solid ${state.units === u ? "var(--border-volt)" : "var(--border-soft)"}`,
+                background: state.units === u ? "var(--volt)" : "var(--surface-2)",
+                color: state.units === u ? "#141906" : "var(--text-secondary)",
+                fontWeight: 700,
+                fontSize: 12,
+              }}
+            >
+              {u === "metric" ? "KM · KG · L" : "MI · LB · OZ"}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
