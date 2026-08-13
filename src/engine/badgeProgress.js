@@ -5,7 +5,7 @@ import { weekQualifies, weekStartKey } from "./regression.js";
 
 // Consecutive qualifying weeks needed to UNLOCK each tier (bronze..legend).
 // One monster week proves nothing — tiers are earned by showing up repeatedly.
-export const UNLOCK_WEEKS = [2, 3, 4, 6, 8];
+export const UNLOCK_WEEKS = [2, 4, 7, 9, 12];
 
 /**
  * How many consecutive weeks (counting the current week once it qualifies)

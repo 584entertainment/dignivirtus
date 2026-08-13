@@ -221,22 +221,22 @@ const weekAgo = (n) => {
     badgeTiers: {},
   });
   check("two bronze-level weeks unlock bronze", eligibleTierIndex(delts, twoWeeks), 1);
-  check("but not silver (needs 3 weeks at 12+)", eligibleTierIndex(delts, twoWeeks) < 2, true);
+  check("but not silver (needs 4 weeks at 12+)", eligibleTierIndex(delts, twoWeeks) < 2, true);
 
-  // Three consecutive weeks at silver volume -> silver, still not gold.
+  // Four consecutive weeks at silver volume -> silver, still not gold.
   const silverRun = baseState({
-    logs: { deltSets: [0, 1, 2].map((n) => ({ date: n === 0 ? weekStartKey() : weekAgo(n), amount: 14 })) },
+    logs: { deltSets: [0, 1, 2, 3].map((n) => ({ date: n === 0 ? weekStartKey() : weekAgo(n), amount: 14 })) },
     badgeTiers: {},
   });
-  check("three silver-level weeks unlock silver", eligibleTierIndex(delts, silverRun), 2);
+  check("four silver-level weeks unlock silver", eligibleTierIndex(delts, silverRun), 2);
 
-  // Six straight weeks at HOF volume -> hof (2 bronze? no: 6 weeks at 32+ satisfies
-  // bronze(2), silver(3), gold(4) and hof(6) simultaneously).
+  // Nine straight weeks at HOF volume satisfies bronze(2), silver(4), gold(7)
+  // and hof(9) simultaneously.
   const hofRun = baseState({
-    logs: { deltSets: [0, 1, 2, 3, 4, 5].map((n) => ({ date: n === 0 ? weekStartKey() : weekAgo(n), amount: 35 })) },
+    logs: { deltSets: [0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ date: n === 0 ? weekStartKey() : weekAgo(n), amount: 35 })) },
     badgeTiers: {},
   });
-  check("six HOF-level weeks unlock HOF", eligibleTierIndex(delts, hofRun), 4);
+  check("nine HOF-level weeks unlock HOF", eligibleTierIndex(delts, hofRun), 4);
 
   // A broken streak resets the count.
   const broken = baseState({
@@ -249,7 +249,7 @@ const weekAgo = (n) => {
   });
   check("a gap week breaks the unlock streak", eligibleTierIndex(delts, broken), 0);
 
-  check("unlock ladder is 2/3/4/6/8 weeks", UNLOCK_WEEKS, [2, 3, 4, 6, 8]);
+  check("unlock ladder is 2/4/7/9/12 weeks", UNLOCK_WEEKS, [2, 4, 7, 9, 12]);
 }
 
 // === schema v1 -> v2 migration ================================================
