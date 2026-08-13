@@ -3,6 +3,7 @@
 import { applyRegression, badgeRisk, isHolding, weeklyNeed, weekStartKey, lastCompletedWeekKey } from "../src/engine/regression.js";
 import { BADGE_MAP } from "../src/data/badges.js";
 import { migrateState } from "../src/engine/migrate.js";
+import { eligibleTierIndex, unlockStreak, UNLOCK_WEEKS } from "../src/engine/badgeProgress.js";
 import { createRunTracker } from "../src/lib/runTracker.js";
 import { restingMetabolicRate, isOnTarget, onTargetDayCount } from "../src/lib/nutrition.js";
 import { formatDistance, formatWeight, formatVolume } from "../src/lib/units.js";
@@ -200,6 +201,55 @@ const weekAgo = (n) => {
   check("3-month streak survives a bad week", rs.badgeTiers.fuel, "silver");
   check("3-month streak banks 3 weeks, spends 1", rs.badgeBank.fuel.bank, 2);
   check("bad week resets the streak", rs.badgeBank.fuel.streak, 0);
+}
+
+// --- unlock streaks: one monster week proves nothing ---------------------------
+{
+  // 60 delt sets in the current week alone — HOF volume, zero history.
+  const monster = baseState({
+    logs: { deltSets: [{ date: weekStartKey(), amount: 60 }] },
+    badgeTiers: {},
+  });
+  check("one monster week unlocks nothing", eligibleTierIndex(delts, monster), 0);
+
+  // 8 sets this week + 8 last week = two consecutive bronze-level weeks.
+  const twoWeeks = baseState({
+    logs: { deltSets: [
+      { date: weekStartKey(), amount: 8 },
+      { date: weekAgo(1), amount: 8 },
+    ] },
+    badgeTiers: {},
+  });
+  check("two bronze-level weeks unlock bronze", eligibleTierIndex(delts, twoWeeks), 1);
+  check("but not silver (needs 3 weeks at 12+)", eligibleTierIndex(delts, twoWeeks) < 2, true);
+
+  // Three consecutive weeks at silver volume -> silver, still not gold.
+  const silverRun = baseState({
+    logs: { deltSets: [0, 1, 2].map((n) => ({ date: n === 0 ? weekStartKey() : weekAgo(n), amount: 14 })) },
+    badgeTiers: {},
+  });
+  check("three silver-level weeks unlock silver", eligibleTierIndex(delts, silverRun), 2);
+
+  // Six straight weeks at HOF volume -> hof (2 bronze? no: 6 weeks at 32+ satisfies
+  // bronze(2), silver(3), gold(4) and hof(6) simultaneously).
+  const hofRun = baseState({
+    logs: { deltSets: [0, 1, 2, 3, 4, 5].map((n) => ({ date: n === 0 ? weekStartKey() : weekAgo(n), amount: 35 })) },
+    badgeTiers: {},
+  });
+  check("six HOF-level weeks unlock HOF", eligibleTierIndex(delts, hofRun), 4);
+
+  // A broken streak resets the count.
+  const broken = baseState({
+    logs: { deltSets: [
+      { date: weekStartKey(), amount: 8 },
+      // weekAgo(1) empty — gap
+      { date: weekAgo(2), amount: 8 },
+    ] },
+    badgeTiers: {},
+  });
+  check("a gap week breaks the unlock streak", eligibleTierIndex(delts, broken), 0);
+
+  check("unlock ladder is 2/3/4/6/8 weeks", UNLOCK_WEEKS, [2, 3, 4, 6, 8]);
 }
 
 // === schema v1 -> v2 migration ================================================

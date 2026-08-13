@@ -1,6 +1,27 @@
 import { ORDER, TIERS, RARITY, GLOWS } from "../data/tiers.js";
 import { weekKey, monthKey, dayKey, todayKey, daysAgo, addDaysKey } from "./dateUtils.js";
 import { onTargetDayCount } from "../lib/nutrition.js";
+import { weekQualifies, weekStartKey } from "./regression.js";
+
+// Consecutive qualifying weeks needed to UNLOCK each tier (bronze..legend).
+// One monster week proves nothing — tiers are earned by showing up repeatedly.
+export const UNLOCK_WEEKS = [2, 3, 4, 6, 8];
+
+/**
+ * How many consecutive weeks (counting the current week once it qualifies)
+ * this badge has performed at the given tier's level, capped at what the
+ * tier requires.
+ */
+export function unlockStreak(badge, state, tierName, cap = 52) {
+  let w = weekStartKey();
+  if (!weekQualifies(badge, state, w, tierName)) w = addDaysKey(w, -7);
+  let streak = 0;
+  while (streak < cap && weekQualifies(badge, state, w, tierName)) {
+    streak++;
+    w = addDaysKey(w, -7);
+  }
+  return streak;
+}
 
 const PRIMARY_KINDS = ["ladder", "ladderCount", "ladderStreakDays", "best", "baselineDelta", "calorieDays"];
 
@@ -107,15 +128,17 @@ function primaryCurrentValue(req, badge, state) {
   return 0;
 }
 
-/** Highest ORDER index (0=locked..5=legend) this badge's live data currently qualifies for. */
+/**
+ * Highest ORDER index (0=locked..5=legend) this badge's live data currently
+ * qualifies for. Each tier demands its own streak of consecutive weeks at
+ * that tier's level — volume alone never unlocks anything.
+ */
 export function eligibleTierIndex(badge, state) {
-  const primaryReq = badge.reqs.find((r) => PRIMARY_KINDS.includes(r.kind));
-  const cur = primaryCurrentValue(primaryReq, badge, state);
   let eligible = 0;
   for (let i = 0; i < 5; i++) {
-    const target = badge.ladder[i];
-    const pass = badge.invert ? cur <= target : cur >= target;
-    if (pass) eligible = i + 1;
+    const tierName = ORDER[i + 1];
+    const need = UNLOCK_WEEKS[i];
+    if (unlockStreak(badge, state, tierName, need) >= need) eligible = i + 1;
     else break;
   }
   return eligible;
@@ -192,7 +215,14 @@ export function computeBadgeView(badge, state, index = 0) {
     opacity: earnedTier === "locked" ? 0.7 : 1,
     nextTierLabel: TIERS[nextKey].label,
     rarity: RARITY[nextKey] || "",
-    hint: pct >= 100 && earnedTier !== "legend" ? "READY TO CLAIM" : `${pct}% TO ${TIERS[nextKey].label}`,
+    hint:
+      earnedTier === "legend"
+        ? "PEAK HELD"
+        : (() => {
+            const need = UNLOCK_WEEKS[Math.min(4, idx)];
+            const streak = unlockStreak(badge, state, nextKey, need);
+            return `WEEK ${Math.min(streak, need)}/${need} AT ${TIERS[nextKey].label} PACE`;
+          })(),
     ladder: ["bronze", "silver", "gold", "hof", "legend"].map((tk, i) => {
       const active = idx >= i + 1;
       return {
