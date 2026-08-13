@@ -12,6 +12,14 @@ import { onTargetDayCount } from "../lib/nutrition.js";
 // something is a fact about your past and is never taken away.
 export const TIER_FLOOR = "bronze";
 
+// Diet undoes progress faster than a missed workout, so the calorie badge can
+// never stockpile slack: its bank caps at one week. Every week must be earned.
+const BANK_CAPS = { fuel: 1 };
+
+function bankCap(badgeId) {
+  return BANK_CAPS[badgeId] ?? Infinity;
+}
+
 /** Monday (start) of the week containing the given date, as a dayKey. */
 export function weekStartKey(d = new Date()) {
   const dt = new Date(d);
@@ -84,7 +92,9 @@ export function holdRequirement(badge, tier) {
 
 function bankFor(state, badgeId) {
   const b = state.badgeBank?.[badgeId];
-  if (b && typeof b.bank === "number" && b.uptoWeek) return { ...b };
+  if (b && typeof b.bank === "number" && b.uptoWeek) {
+    return { ...b, bank: Math.min(bankCap(badgeId), b.bank) };
+  }
   // First time under this system (or a fresh promotion): one banked week,
   // clock starts now — nobody is punished for history the app never watched.
   return { bank: 1, uptoWeek: lastCompletedWeekKey() };
@@ -115,7 +125,7 @@ export function applyRegression(state) {
         continue;
       }
       if (weekQualifies(badge, state, week, tier)) {
-        b.bank += 1;
+        b.bank = Math.min(bankCap(badge.id), b.bank + 1);
       } else {
         b.bank -= 1;
         if (b.bank <= 0) {

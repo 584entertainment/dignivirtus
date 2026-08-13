@@ -153,7 +153,7 @@ export default function Fuel({ nav }) {
               ? "A CUT DAY ONLY COUNTS ONCE IT'S OVER — FINISH THE DAY UNDER YOUR RATE."
               : "A BUILD DAY COUNTS THE MOMENT YOUR TOTAL CROSSES YOUR RATE."}
             <br />
-            SWITCH GOALS ANY TIME FROM THIS SCREEN'S SETUP.
+            DIET COVER NEVER BANKS PAST ONE WEEK — EVERY WEEK HAS TO BE EARNED.
           </p>
 
           <button

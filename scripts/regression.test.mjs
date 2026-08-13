@@ -163,6 +163,42 @@ const weekAgo = (n) => {
   check("spare banked weeks read slipping", badgeRisk(delts, cover).status, "slipping");
 }
 
+// --- fuel badge: diet cover caps at one banked week ---------------------------
+{
+  const fuel = BADGE_MAP.fuel;
+  // Three straight on-target weeks (silver needs ceil(12/4)=3 on-target days/wk)
+  const days = [];
+  for (let w = 1; w <= 3; w++) {
+    for (let d = 0; d < 3; d++) {
+      const monday = weekAgo(w);
+      const dt = new Date(monday + "T00:00:00");
+      dt.setDate(dt.getDate() + d);
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+      days.push({ date: key, amount: 1500 });
+    }
+  }
+  const s = baseState({
+    rmr: 1800,
+    calorieGoal: "cut",
+    logs: { calories: days },
+    badgeTiers: { fuel: "silver" },
+    badgeBank: { fuel: { bank: 1, uptoWeek: weekAgo(4) } },
+  });
+  const r = applyRegression(s);
+  check("fuel bank never exceeds 1", r.badgeBank.fuel.bank, 1);
+  check("fuel holds while weeks are on target", r.badgeTiers.fuel, "silver");
+
+  const off = baseState({
+    rmr: 1800,
+    calorieGoal: "cut",
+    logs: { calories: [] },
+    badgeTiers: { fuel: "silver" },
+    badgeBank: { fuel: { bank: 5, uptoWeek: weekAgo(2) } },
+  });
+  const r2 = applyRegression(off);
+  check("stored fuel bank above cap is clamped, one off week demotes", r2.badgeTiers.fuel, "bronze");
+}
+
 // === schema v1 -> v2 migration ================================================
 {
   const v1 = {
