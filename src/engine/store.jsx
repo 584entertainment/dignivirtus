@@ -3,7 +3,7 @@ import { BADGES } from "../data/badges.js";
 import { baselineFromAnswers } from "../data/survey.js";
 import { eligibleTierIndex, ORDER } from "./badgeProgress.js";
 import { applyAttributeBump, maybeRollWeekSnapshot, computeAttributes } from "./overall.js";
-import { applyRegression } from "./regression.js";
+import { applyRegression, lastCompletedWeekKey } from "./regression.js";
 import { todayKey, daysAgo } from "./dateUtils.js";
 import { emptyLogs, migrateState } from "./migrate.js";
 
@@ -47,8 +47,9 @@ function defaultState() {
     unlockQueue: [],
     onboardedAt: null,
     lastUnlock: null,
-    // Last date each badge was seen performing at the level that earned its tier.
-    badgeHold: {},
+    // Weeks of cover per badge: consecutive held weeks bank up, idle weeks
+    // spend down; an empty bank at week's end drops the tier.
+    badgeBank: {},
     // Tier drops since the player last acknowledged them.
     lostQueue: [],
   };
@@ -64,10 +65,17 @@ function settleBadges(state) {
     lastUnlock: unlocks.length ? unlocks[unlocks.length - 1] : state.lastUnlock,
   };
 
+  // A freshly promoted tier starts with one banked week — this week's work.
+  const badgeBank = { ...(state.badgeBank || {}) };
+  for (const u of unlocks) {
+    badgeBank[u.badgeId] = { bank: 1, uptoWeek: lastCompletedWeekKey() };
+  }
+  next = { ...next, badgeBank };
+
   const reg = applyRegression(next);
   next = {
     ...next,
-    badgeHold: reg.badgeHold,
+    badgeBank: reg.badgeBank,
     badgeTiers: reg.badgeTiers,
     lostQueue: [...(next.lostQueue || []), ...reg.demotions],
   };

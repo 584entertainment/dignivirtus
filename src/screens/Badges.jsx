@@ -77,7 +77,7 @@ export default function Badges({ nav }) {
             </div>
             <div style={{ fontWeight: 700, fontSize: 13, minHeight: 32, lineHeight: 1.3 }}>{b.name}</div>
             <ProgressBar pct={b.pct} color={b.tierColor === "rgba(241,245,234,.4)" ? "var(--volt)" : b.tierColor} height={4} />
-            {b.risk.status === "at_risk" || b.risk.status === "dropping" ? (
+            {b.risk.status === "at_risk" ? (
               <span
                 className="mono"
                 style={{
@@ -86,9 +86,7 @@ export default function Badges({ nav }) {
                   animation: "callOutPulse 1.6s ease-in-out infinite",
                 }}
               >
-                {b.risk.status === "dropping"
-                  ? "DROPPING A TIER"
-                  : `AT RISK · ${b.risk.daysLeft}D LEFT`}
+                {`AT RISK · ${b.risk.daysLeft}D LEFT`}
               </span>
             ) : (
               <span

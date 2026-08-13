@@ -2,7 +2,7 @@ import { useAppState, useAppDispatch } from "../engine/store.jsx";
 import { BADGE_MAP } from "../data/badges.js";
 import { QUICK_LOG } from "../data/quickLog.js";
 import { computeBadgeView } from "../engine/badgeProgress.js";
-import { badgeRisk, holdRequirement, maintenanceWindow } from "../engine/regression.js";
+import { badgeRisk, holdRequirement } from "../engine/regression.js";
 import BadgeEmblem from "../components/BadgeEmblem.jsx";
 import ProgressBar from "../components/ProgressBar.jsx";
 
@@ -14,14 +14,9 @@ export default function BadgeDetail({ nav }) {
   const quick = QUICK_LOG[badge.metric];
 
   const risk = badgeRisk(badge, state);
-  const window = maintenanceWindow(badge);
   const holdNeed = holdRequirement(badge, risk.tier);
   const fmtNeed =
-    holdNeed == null
-      ? ""
-      : badge.invert
-        ? `a ${holdNeed} split or better`
-        : `${holdNeed} ${badge.unit.split(" PER ")[0].toLowerCase()}`;
+    holdNeed == null ? "" : `${holdNeed} ${badge.unit.split(" PER ")[0].toLowerCase()}`;
 
   const logQuick = () => {
     if (!quick) return;
@@ -79,11 +74,11 @@ export default function BadgeDetail({ nav }) {
             style={{
               marginBottom: 22,
               border:
-                risk.status === "at_risk" || risk.status === "dropping"
+                risk.status === "at_risk"
                   ? "1px solid rgba(226,96,60,.42)"
                   : "1px solid var(--border-faint)",
               background:
-                risk.status === "at_risk" || risk.status === "dropping"
+                risk.status === "at_risk"
                   ? "rgba(226,96,60,.08)"
                   : "var(--surface-1)",
             }}
@@ -92,7 +87,7 @@ export default function BadgeDetail({ nav }) {
               <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
                 {holdNeed == null
                   ? "Bronze is yours for good"
-                  : `Keep ${fmtNeed} every ${window} days`}
+                  : `Keep ${fmtNeed} a week to bank cover`}
               </span>
               <span
                 className="mono"
@@ -107,18 +102,16 @@ export default function BadgeDetail({ nav }) {
                 }}
               >
                 {risk.status === "holding"
-                  ? "HOLDING"
+                  ? `HOLDING · ${risk.bank}W BANKED`
                   : risk.status === "safe"
                     ? "SECURE"
-                    : risk.status === "dropping"
-                      ? "DROPPING"
-                      : `${risk.daysLeft}D LEFT`}
+                    : `${risk.daysLeft}D LEFT`}
               </span>
             </div>
             <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
               {holdNeed == null
                 ? "Bronze can never be taken off you. Every tier above it has to be kept up."
-                : "Tiers say what you can do now, not what you once did. Fall below this for long enough and the badge drops a tier — but you'll be warned first."}
+                : "Every week you perform at this level banks one week off. Idle weeks spend the bank — and when it's empty, the badge drops a tier. Consistency literally buys you slack."}
             </p>
           </div>
         </>

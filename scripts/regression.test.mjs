@@ -1,6 +1,6 @@
 // Quick behavioural checks on tier regression, schema migration, run tracking,
 // nutrition maths and unit conversion. Run: node scripts/regression.test.mjs
-import { applyRegression, badgeRisk, isHolding, graceDays } from "../src/engine/regression.js";
+import { applyRegression, badgeRisk, isHolding, weeklyNeed, weekStartKey, lastCompletedWeekKey } from "../src/engine/regression.js";
 import { BADGE_MAP } from "../src/data/badges.js";
 import { migrateState } from "../src/engine/migrate.js";
 import { createRunTracker } from "../src/lib/runTracker.js";
@@ -36,33 +36,83 @@ const baseState = (over = {}) => ({
   ...over,
 });
 
-// delts = weekly sets badge, ladder [6,12,20,32,50]; silver needs 12/wk to hold.
+// delts = weekly sets badge, ladder [6,12,20,32,50]. Under the bank system a
+// silver holder needs 12 sets in a week to bank a week of cover.
 const delts = BADGE_MAP.delts;
+const weekAgo = (n) => {
+  // Monday dayKey of the week n weeks before the current one.
+  const monday = weekStartKey();
+  const d = new Date(monday + "T00:00:00");
+  d.setDate(d.getDate() - 7 * n);
+  return d.toISOString() === undefined ? monday : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
-// --- still training at the level that earned it -> holding, no drop -----------
 {
-  const s = baseState({
-    logs: { deltSets: [{ date: dayKey(1), amount: 8 }, { date: dayKey(3), amount: 6 }] },
-    badgeTiers: { delts: "silver" },
-    badgeHold: { delts: dayKey(40) },
-  });
-  check("holds silver while hitting 14 sets/wk", isHolding(delts, s, "silver"), true);
-  const r = applyRegression(s);
-  check("no demotion while holding", r.demotions.length, 0);
-  check("hold clock reset to today", r.badgeHold.delts, dayKey(0));
+  check("weekly need: silver delts = 12 sets", weeklyNeed(delts, "silver"), 12);
+  check("weekly need: tenk silver = 4 ten-k days", weeklyNeed(BADGE_MAP.tenk, "silver"), 4);
+  check("weekly need: hydro gold = 7 days max", weeklyNeed(BADGE_MAP.hydro, "gold"), 7);
 }
 
-// --- lapsed well past the grace window -> drops exactly one tier --------------
+// --- 1 held week, 1 idle week -> tier lost at end of the idle week -----------
 {
   const s = baseState({
-    logs: { deltSets: [{ date: dayKey(60), amount: 30 }] },
-    badgeTiers: { delts: "gold" },
-    badgeHold: { delts: dayKey(graceDays(delts) + 5) },
+    // Qualified last-last week (bank grows to 2 from seed 1? no: seed uptoWeek
+    // controls processing). Seed: bank 1 earned 2 weeks ago, then an idle
+    // completed week -> bank 0 -> demote.
+    logs: { deltSets: [] },
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 1, uptoWeek: weekAgo(2) } },
   });
   const r = applyRegression(s);
-  check("gold drops after grace", r.badgeTiers.delts, "silver");
+  check("bank of 1 + idle week = demoted", r.badgeTiers.delts, "bronze");
   check("one demotion recorded", r.demotions.length, 1);
-  check("clock restarts so one lapse costs one tier", r.badgeHold.delts, dayKey(0));
+}
+
+// --- banked consistency survives an idle week --------------------------------
+{
+  const s = baseState({
+    logs: { deltSets: [] },
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 2, uptoWeek: weekAgo(2) } },
+  });
+  const r = applyRegression(s);
+  check("bank of 2 survives one idle week", r.badgeTiers.delts, "silver");
+  check("idle week spends one banked week", r.badgeBank.delts.bank, 1);
+}
+
+// --- qualifying weeks grow the bank ------------------------------------------
+{
+  const s = baseState({
+    logs: { deltSets: [{ date: weekAgo(1), amount: 14 }] }, // 14 sets last week
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 1, uptoWeek: weekAgo(2) } },
+  });
+  const r = applyRegression(s);
+  check("held week banks another week", r.badgeBank.delts.bank, 2);
+  check("no demotion while holding", r.demotions.length, 0);
+}
+
+// --- two idle weeks with bank 2 -> lost at the end of the second -------------
+{
+  const s = baseState({
+    logs: { deltSets: [] },
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 2, uptoWeek: weekAgo(3) } },
+  });
+  const r = applyRegression(s);
+  check("bank of 2 + two idle weeks = demoted", r.badgeTiers.delts, "bronze");
+}
+
+// --- long idle stretch cascades one tier per week down to bronze -------------
+{
+  const s = baseState({
+    logs: { deltSets: [] },
+    badgeTiers: { delts: "hof" },
+    badgeBank: { delts: { bank: 1, uptoWeek: weekAgo(4) } },
+  });
+  const r = applyRegression(s);
+  check("4 idle weeks drop hof to bronze floor, not below", r.badgeTiers.delts, "bronze");
+  check("each idle week cost one tier", r.demotions.length, 3);
 }
 
 // --- bronze is the floor ------------------------------------------------------
@@ -70,35 +120,47 @@ const delts = BADGE_MAP.delts;
   const s = baseState({
     logs: { deltSets: [] },
     badgeTiers: { delts: "bronze" },
-    badgeHold: { delts: dayKey(99) },
+    badgeBank: { delts: { bank: 1, uptoWeek: weekAgo(6) } },
   });
   const r = applyRegression(s);
   check("bronze never drops", r.badgeTiers.delts, "bronze");
   check("no demotion at floor", r.demotions.length, 0);
 }
 
-// --- newly slipping starts the clock rather than back-dating a punishment -----
+// --- no stored bank: clock starts now, no back-dated punishment --------------
 {
   const s = baseState({
     logs: { deltSets: [] },
     badgeTiers: { delts: "gold" },
-    badgeHold: {},
   });
   const r = applyRegression(s);
-  check("first slip only starts the clock", r.demotions.length, 0);
-  check("clock starts today", r.badgeHold.delts, dayKey(0));
+  check("fresh bank seeds at 1 with no demotion", r.demotions.length, 0);
+  check("clock starts at last completed week", r.badgeBank.delts.uptoWeek, lastCompletedWeekKey());
 }
 
-// --- warning fires before the drop -------------------------------------------
+// --- risk surface -------------------------------------------------------------
 {
-  const s = baseState({
-    logs: { deltSets: [] },
-    badgeTiers: { delts: "gold" },
-    badgeHold: { delts: dayKey(graceDays(delts) - 3) },
+  const holding = baseState({
+    logs: { deltSets: [{ date: weekStartKey(), amount: 12 }] },
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 3, uptoWeek: lastCompletedWeekKey() } },
   });
-  const risk = badgeRisk(delts, s);
-  check("warns before dropping", risk.status, "at_risk");
-  check("counts down the days left", risk.daysLeft, 3);
+  check("holding when this week already qualifies", badgeRisk(delts, holding).status, "holding");
+  check("isHolding sees this week's sets", isHolding(delts, holding, "silver"), true);
+
+  const lastWeekOfCover = baseState({
+    logs: { deltSets: [] },
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 1, uptoWeek: lastCompletedWeekKey() } },
+  });
+  check("final banked week reads at_risk", badgeRisk(delts, lastWeekOfCover).status, "at_risk");
+
+  const cover = baseState({
+    logs: { deltSets: [] },
+    badgeTiers: { delts: "silver" },
+    badgeBank: { delts: { bank: 3, uptoWeek: lastCompletedWeekKey() } },
+  });
+  check("spare banked weeks read slipping", badgeRisk(delts, cover).status, "slipping");
 }
 
 // === schema v1 -> v2 migration ================================================

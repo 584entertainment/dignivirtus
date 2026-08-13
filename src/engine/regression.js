@@ -1,151 +1,180 @@
 import { ORDER } from "../data/tiers.js";
 import { BADGES } from "../data/badges.js";
-import { todayKey, daysAgo } from "./dateUtils.js";
+import { dayKey, addDaysKey, todayKey } from "./dateUtils.js";
 import { onTargetDayCount } from "../lib/nutrition.js";
 
-// Tiers reflect *current* ability, so holding one means still performing at the
-// level that earned it. Fall below for long enough and the badge drops a tier.
+// Banked-consistency regression: every completed week performing at the level
+// that earned a tier banks one week of cover; every week off spends one. When
+// the bank runs out at the end of a week off, the badge drops one tier.
 //
-// The floor is bronze: starting something is a fact about your past and is never
-// taken away, but Silver and above have to be re-earned.
+// So a tier earned with a single good week survives exactly one idle week,
+// while a 6-week streak buys 6 weeks of slack. The floor is bronze: starting
+// something is a fact about your past and is never taken away.
 export const TIER_FLOOR = "bronze";
 
-/** Maintenance window in days — matches how the badge measures itself. */
-export function maintenanceWindow(badge) {
-  return /MONTH/.test(badge.unit) ? 30 : 7;
+/** Monday (start) of the week containing the given date, as a dayKey. */
+export function weekStartKey(d = new Date()) {
+  const dt = new Date(d);
+  dt.setHours(0, 0, 0, 0);
+  const day = dt.getDay() || 7; // Mon=1..Sun=7
+  dt.setDate(dt.getDate() - (day - 1));
+  return dayKey(dt);
 }
 
-/** Full grace period before a tier actually drops, and when we start warning. */
-export function graceDays(badge) {
-  return maintenanceWindow(badge) === 30 ? 45 : 21;
-}
-export function warnDays(badge) {
-  return graceDays(badge) - 7;
-}
-
-function trailingEntries(entries, days) {
-  return (entries || []).filter((e) => daysAgo(e.date) < days);
+/** Monday of the most recently COMPLETED week. */
+export function lastCompletedWeekKey(now = new Date()) {
+  return addDaysKey(weekStartKey(now), -7);
 }
 
 /**
- * What this badge is currently producing over its maintenance window, using the
- * same shape of measurement the badge is scored on.
+ * What one week must produce to hold a tier. Weekly badges use their ladder
+ * value directly; monthly badges are pro-rated to a quarter of it; day-streak
+ * ladders (Hydro) are capped at 7 qualifying days.
  */
-export function trailingValue(badge, state) {
-  const entries = state.logs?.[badge.metric] || [];
-  const window = maintenanceWindow(badge);
-  const recent = trailingEntries(entries, window);
-
-  if (badge.id === "fuel") {
-    // Macro Governor counts on-target calorie days, not raw kcal totals.
-    return onTargetDayCount(recent, state, todayKey());
-  }
-
-  if (badge.invert) {
-    if (!recent.length) return Infinity;
-    return Math.min(...recent.map((e) => e.amount));
-  }
-
-  if (badge.dailyTarget) {
-    // Streak/qualifying-day badges count days that cleared the daily bar.
-    const byDay = {};
-    recent.forEach((e) => {
-      byDay[e.date] = (byDay[e.date] || 0) + e.amount;
-    });
-    return Object.values(byDay).filter((v) => v >= badge.dailyTarget).length;
-  }
-
-  return recent.reduce((a, e) => a + e.amount, 0);
-}
-
-/** The output required to hold the tier currently held. */
-export function holdRequirement(badge, tier) {
+export function weeklyNeed(badge, tier) {
   const idx = ORDER.indexOf(tier);
   if (idx <= 0) return null;
-  return badge.ladder[Math.min(badge.ladder.length - 1, idx - 1)];
+  const target = badge.ladder[Math.min(badge.ladder.length - 1, idx - 1)];
+  if (/MONTH/.test(badge.unit) || /STREAK/.test(badge.unit)) {
+    const need = Math.ceil(target / 4);
+    return badge.dailyTarget || badge.id === "fuel" || /STREAK/.test(badge.unit)
+      ? Math.min(7, need)
+      : need;
+  }
+  return target;
 }
 
-export function isHolding(badge, state, tier) {
-  const need = holdRequirement(badge, tier);
+/** Did the week starting at `weekStart` (a Monday dayKey) hold this tier? */
+export function weekQualifies(badge, state, weekStart, tier) {
+  const need = weeklyNeed(badge, tier);
   if (need == null) return true;
-  const have = trailingValue(badge, state);
-  return badge.invert ? have <= need : have >= need;
+  const weekEnd = addDaysKey(weekStart, 7);
+  const entries = (state.logs?.[badge.metric] || []).filter(
+    (e) => e.date >= weekStart && e.date < weekEnd,
+  );
+  if (!entries.length) return false;
+
+  if (badge.id === "fuel") {
+    // Judge the week's calorie days as of after that week ended, so finished
+    // cut days inside it count.
+    return onTargetDayCount(entries, state, weekEnd) >= need;
+  }
+
+  if (badge.dailyTarget || /STREAK/.test(badge.unit)) {
+    const byDay = {};
+    entries.forEach((e) => {
+      byDay[e.date] = (byDay[e.date] || 0) + e.amount;
+    });
+    const target = badge.dailyTarget || 1;
+    return Object.values(byDay).filter((v) => v >= target).length >= need;
+  }
+
+  return entries.reduce((a, e) => a + e.amount, 0) >= need;
+}
+
+/** Is the current (in-progress) week already at holding level? */
+export function isHolding(badge, state, tier) {
+  return weekQualifies(badge, state, weekStartKey(), tier);
+}
+
+/** The weekly output required to hold the tier currently held. */
+export function holdRequirement(badge, tier) {
+  return weeklyNeed(badge, tier);
+}
+
+function bankFor(state, badgeId) {
+  const b = state.badgeBank?.[badgeId];
+  if (b && typeof b.bank === "number" && b.uptoWeek) return { ...b };
+  // First time under this system (or a fresh promotion): one banked week,
+  // clock starts now — nobody is punished for history the app never watched.
+  return { bank: 1, uptoWeek: lastCompletedWeekKey() };
 }
 
 /**
- * Status of one badge: holding, warned, or overdue for a drop.
- * `heldAt` is the last date the badge was seen meeting its hold requirement.
+ * Process every completed week since each badge was last assessed: qualifying
+ * weeks grow the bank, idle weeks spend it, and an exhausted bank drops the
+ * tier by one. Returns the patch to merge into state plus what was lost.
+ */
+export function applyRegression(state) {
+  const badgeBank = { ...(state.badgeBank || {}) };
+  const badgeTiers = { ...(state.badgeTiers || {}) };
+  const demotions = [];
+  const lastDone = lastCompletedWeekKey();
+
+  for (const badge of BADGES) {
+    let tier = badgeTiers[badge.id] || "locked";
+    if (tier === "locked") continue;
+
+    const b = bankFor(state, badge.id);
+    let guard = 0;
+    while (b.uptoWeek < lastDone && guard++ < 104) {
+      const week = addDaysKey(b.uptoWeek, 7);
+      if (tier === TIER_FLOOR) {
+        // Nothing left to lose — just move the clock forward.
+        b.uptoWeek = week;
+        continue;
+      }
+      if (weekQualifies(badge, state, week, tier)) {
+        b.bank += 1;
+      } else {
+        b.bank -= 1;
+        if (b.bank <= 0) {
+          const idx = ORDER.indexOf(tier);
+          const floorIdx = ORDER.indexOf(TIER_FLOOR);
+          const nextTier = ORDER[Math.max(floorIdx, idx - 1)];
+          if (nextTier !== tier) {
+            demotions.push({ badgeId: badge.id, fromTier: tier, toTier: nextTier });
+            tier = nextTier;
+            badgeTiers[badge.id] = nextTier;
+          }
+          // Each further idle week costs one more tier, down to the floor.
+          b.bank = 1;
+        }
+      }
+      b.uptoWeek = week;
+    }
+    badgeBank[badge.id] = b;
+  }
+
+  return { badgeBank, badgeTiers, demotions };
+}
+
+/**
+ * Status of one badge under the bank system. `bank` is weeks of cover;
+ * `daysLeft` is how long until the tier would actually drop if the player
+ * logs nothing at all from here on.
  */
 export function badgeRisk(badge, state) {
   const tier = state.badgeTiers?.[badge.id] || "locked";
   if (tier === "locked" || tier === TIER_FLOOR) {
-    return { status: "safe", tier, daysIdle: 0, daysLeft: null };
+    return { status: "safe", tier, bank: null, daysLeft: null };
   }
 
-  const holding = isHolding(badge, state, tier);
-  if (holding) return { status: "holding", tier, daysIdle: 0, daysLeft: null };
+  const bank = bankFor(state, badge.id).bank;
+  if (isHolding(badge, state, tier)) {
+    return { status: "holding", tier, bank, daysLeft: null };
+  }
 
-  const heldAt = state.badgeHold?.[badge.id];
-  const daysIdle = heldAt ? daysAgo(heldAt) : 0;
-  const grace = graceDays(badge);
-  const daysLeft = Math.max(0, grace - daysIdle);
+  // Days until the end of the current week, plus any spare banked weeks.
+  const today = todayKey();
+  const endOfWeek = addDaysKey(weekStartKey(), 7);
+  const daysThisWeek = Math.max(
+    1,
+    Math.round((new Date(endOfWeek + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000),
+  );
+  const daysLeft = daysThisWeek + Math.max(0, bank - 1) * 7;
 
   return {
-    status: daysIdle >= grace ? "dropping" : daysIdle >= warnDays(badge) ? "at_risk" : "slipping",
+    status: bank <= 1 ? "at_risk" : "slipping",
     tier,
-    daysIdle,
+    bank,
     daysLeft,
   };
 }
 
-/**
- * Refresh hold timestamps and apply any tier drops that are due.
- * Returns the patch to merge into state, plus what was lost (for the UI notice).
- */
-export function applyRegression(state) {
-  const today = todayKey();
-  const badgeHold = { ...(state.badgeHold || {}) };
-  const badgeTiers = { ...(state.badgeTiers || {}) };
-  const demotions = [];
-
-  for (const badge of BADGES) {
-    const tier = badgeTiers[badge.id] || "locked";
-    if (tier === "locked") continue;
-
-    if (isHolding(badge, state, tier)) {
-      // Still performing at the level that earned it — clock resets.
-      badgeHold[badge.id] = today;
-      continue;
-    }
-
-    // First time we've seen it slipping: start the clock now rather than
-    // back-dating, so nobody is punished for history the app never watched.
-    if (!badgeHold[badge.id]) {
-      badgeHold[badge.id] = today;
-      continue;
-    }
-
-    if (tier === TIER_FLOOR) continue;
-
-    if (daysAgo(badgeHold[badge.id]) >= graceDays(badge)) {
-      const idx = ORDER.indexOf(tier);
-      const floorIdx = ORDER.indexOf(TIER_FLOOR);
-      const nextTier = ORDER[Math.max(floorIdx, idx - 1)];
-      if (nextTier !== tier) {
-        badgeTiers[badge.id] = nextTier;
-        demotions.push({ badgeId: badge.id, fromTier: tier, toTier: nextTier });
-        // Restart the clock so a single lapse costs one tier, not several.
-        badgeHold[badge.id] = today;
-      }
-    }
-  }
-
-  return { badgeHold, badgeTiers, demotions };
-}
-
-/** Badges currently warned or overdue — used for the Player screen warning. */
+/** Badges currently in their final banked week — used for the Player warning. */
 export function badgesAtRisk(state) {
   return BADGES.map((b) => ({ badge: b, risk: badgeRisk(b, state) })).filter(
-    (r) => r.risk.status === "at_risk" || r.risk.status === "dropping",
+    (r) => r.risk.status === "at_risk",
   );
 }
