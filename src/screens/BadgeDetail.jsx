@@ -105,7 +105,7 @@ export default function BadgeDetail({ nav }) {
                   ? `HOLDING · ${risk.bank}W BANKED`
                   : risk.status === "safe"
                     ? "SECURE"
-                    : `${risk.daysLeft}D LEFT`}
+                    : `${risk.bank}W BANKED · ${risk.daysLeft}D LEFT`}
               </span>
             </div>
             <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>

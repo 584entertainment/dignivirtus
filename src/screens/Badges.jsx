@@ -97,7 +97,7 @@ export default function Badges({ nav }) {
                   animation: b.pct >= 75 ? "callOutPulse 1.8s ease-in-out infinite" : "none",
                 }}
               >
-                {b.hint}
+                {b.risk.bank != null && b.risk.status === "holding" ? `${b.risk.bank}W BANKED · ${b.hint}` : b.hint}
               </span>
             )}
           </button>
