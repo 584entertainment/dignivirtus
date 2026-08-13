@@ -191,6 +191,13 @@ export default function Profile({ nav }) {
       </div>
 
       <button
+        onClick={() => nav("how")}
+        style={{ width: "100%", marginBottom: 10, padding: 14, borderRadius: 999, border: "1px solid var(--border-volt)", background: "rgba(200,241,53,.08)", color: "var(--volt)", fontWeight: 700 }}
+      >
+        HOW IT WORKS — GAIN, KEEP, LOSE
+      </button>
+
+      <button
         disabled={!state.lastUnlock}
         onClick={() => dispatch({ type: "REPLAY_UNLOCK" })}
         style={{ width: "100%", marginBottom: 10, padding: 14, borderRadius: 999, border: "1px solid var(--border-volt)", background: "transparent", color: state.lastUnlock ? "var(--volt)" : "var(--text-tertiary)", fontWeight: 700 }}

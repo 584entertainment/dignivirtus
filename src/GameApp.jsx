@@ -17,6 +17,7 @@ import Movement from "./screens/Movement.jsx";
 import Recovery from "./screens/Recovery.jsx";
 import Crew from "./screens/Crew.jsx";
 import Profile from "./screens/Profile.jsx";
+import HowItWorks from "./screens/HowItWorks.jsx";
 import Unlock from "./screens/Unlock.jsx";
 import TierLost from "./screens/TierLost.jsx";
 import appIcon from "./assets/generated/app-icon.svg";
@@ -34,6 +35,7 @@ const TAB_FOR_SCREEN = {
   livelog: "log",
   fuel: "log",
   run: "player",
+  how: "player",
   crew: "crew",
 };
 
@@ -154,6 +156,9 @@ export default function GameApp() {
         break;
       case "profile":
         body = <Profile nav={nav} />;
+        break;
+      case "how":
+        body = <HowItWorks nav={nav} />;
         break;
       default:
         body = <Player nav={nav} />;
