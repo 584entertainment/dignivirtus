@@ -163,40 +163,43 @@ const weekAgo = (n) => {
   check("spare banked weeks read slipping", badgeRisk(delts, cover).status, "slipping");
 }
 
-// --- fuel badge: diet cover caps at one banked week ---------------------------
+// --- fuel badge: tiered diet cover — track record buys forgiveness ------------
 {
-  const fuel = BADGE_MAP.fuel;
-  // Three straight on-target weeks (silver needs ceil(12/4)=3 on-target days/wk)
-  const days = [];
-  for (let w = 1; w <= 3; w++) {
-    for (let d = 0; d < 3; d++) {
-      const monday = weekAgo(w);
-      const dt = new Date(monday + "T00:00:00");
-      dt.setDate(dt.getDate() + d);
-      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-      days.push({ date: key, amount: 1500 });
+  const fuelDays = (weeksAgoList) => {
+    // 3 on-target cut days (1500 vs rmr 1800) in each listed week
+    const out = [];
+    for (const w of weeksAgoList) {
+      for (let d = 0; d < 3; d++) {
+        const dt = new Date(weekAgo(w) + "T00:00:00");
+        dt.setDate(dt.getDate() + d);
+        out.push({ date: `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`, amount: 1500 });
+      }
     }
-  }
-  const s = baseState({
-    rmr: 1800,
-    calorieGoal: "cut",
-    logs: { calories: days },
-    badgeTiers: { fuel: "silver" },
-    badgeBank: { fuel: { bank: 1, uptoWeek: weekAgo(4) } },
-  });
-  const r = applyRegression(s);
-  check("fuel bank never exceeds 1", r.badgeBank.fuel.bank, 1);
-  check("fuel holds while weeks are on target", r.badgeTiers.fuel, "silver");
+    return out;
+  };
 
-  const off = baseState({
-    rmr: 1800,
-    calorieGoal: "cut",
-    logs: { calories: [] },
+  // New habit: 2 good weeks then a bad one -> cap 1 means the bad week drops it.
+  const young = baseState({
+    rmr: 1800, calorieGoal: "cut",
+    logs: { calories: fuelDays([3, 2]) }, // weeks 3+2 ago good, last week empty
     badgeTiers: { fuel: "silver" },
-    badgeBank: { fuel: { bank: 5, uptoWeek: weekAgo(2) } },
+    badgeBank: { fuel: { bank: 1, streak: 0, uptoWeek: weekAgo(4) } },
   });
-  const r2 = applyRegression(off);
-  check("stored fuel bank above cap is clamped, one off week demotes", r2.badgeTiers.fuel, "bronze");
+  const ry = applyRegression(young);
+  check("short streak: one bad week demotes", ry.badgeTiers.fuel, "bronze");
+  check("short streak capped at 1 banked week", ry.badgeBank.fuel.bank, 1);
+
+  // 3-month track record: bank grows to tier cap 3, one bad week only spends one.
+  const seasoned = baseState({
+    rmr: 1800, calorieGoal: "cut",
+    logs: { calories: fuelDays(Array.from({ length: 14 }, (_, i) => i + 2)) }, // 14 good weeks, last week empty
+    badgeTiers: { fuel: "silver" },
+    badgeBank: { fuel: { bank: 1, streak: 0, uptoWeek: weekAgo(16) } },
+  });
+  const rs = applyRegression(seasoned);
+  check("3-month streak survives a bad week", rs.badgeTiers.fuel, "silver");
+  check("3-month streak banks 3 weeks, spends 1", rs.badgeBank.fuel.bank, 2);
+  check("bad week resets the streak", rs.badgeBank.fuel.streak, 0);
 }
 
 // === schema v1 -> v2 migration ================================================

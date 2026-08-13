@@ -12,12 +12,19 @@ import { onTargetDayCount } from "../lib/nutrition.js";
 // something is a fact about your past and is never taken away.
 export const TIER_FLOOR = "bronze";
 
-// Diet undoes progress faster than a missed workout, so the calorie badge can
-// never stockpile slack: its bank caps at one week. Every week must be earned.
-const BANK_CAPS = { fuel: 1 };
+// Diet undoes progress faster than a missed workout, so the calorie badge's
+// cover is tiered by track record instead of banking freely: a month of
+// consistency forgives little, a year forgives a lot — but never everything.
+function fuelBankCap(streakWeeks) {
+  if (streakWeeks < 4) return 1; // building the habit: no room for a bad week
+  if (streakWeeks < 13) return 2; // 1-3 months in
+  if (streakWeeks < 26) return 3; // 3-6 months
+  if (streakWeeks < 52) return 4; // 6-12 months
+  return 6; // a year of proof
+}
 
-function bankCap(badgeId) {
-  return BANK_CAPS[badgeId] ?? Infinity;
+function bankCap(badgeId, streakWeeks) {
+  return badgeId === "fuel" ? fuelBankCap(streakWeeks) : Infinity;
 }
 
 /** Monday (start) of the week containing the given date, as a dayKey. */
@@ -93,11 +100,12 @@ export function holdRequirement(badge, tier) {
 function bankFor(state, badgeId) {
   const b = state.badgeBank?.[badgeId];
   if (b && typeof b.bank === "number" && b.uptoWeek) {
-    return { ...b, bank: Math.min(bankCap(badgeId), b.bank) };
+    const streak = b.streak || 0;
+    return { ...b, streak, bank: Math.min(bankCap(badgeId, streak), b.bank) };
   }
   // First time under this system (or a fresh promotion): one banked week,
   // clock starts now — nobody is punished for history the app never watched.
-  return { bank: 1, uptoWeek: lastCompletedWeekKey() };
+  return { bank: 1, streak: 0, uptoWeek: lastCompletedWeekKey() };
 }
 
 /**
@@ -125,8 +133,10 @@ export function applyRegression(state) {
         continue;
       }
       if (weekQualifies(badge, state, week, tier)) {
-        b.bank = Math.min(bankCap(badge.id), b.bank + 1);
+        b.streak = (b.streak || 0) + 1;
+        b.bank = Math.min(bankCap(badge.id, b.streak), b.bank + 1);
       } else {
+        b.streak = 0;
         b.bank -= 1;
         if (b.bank <= 0) {
           const idx = ORDER.indexOf(tier);

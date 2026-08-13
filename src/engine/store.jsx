@@ -68,7 +68,12 @@ function settleBadges(state) {
   // A freshly promoted tier starts with one banked week — this week's work.
   const badgeBank = { ...(state.badgeBank || {}) };
   for (const u of unlocks) {
-    badgeBank[u.badgeId] = { bank: 1, uptoWeek: lastCompletedWeekKey() };
+    // Bank resets for the new, harder tier; the consistency streak survives.
+    badgeBank[u.badgeId] = {
+      bank: 1,
+      streak: badgeBank[u.badgeId]?.streak || 0,
+      uptoWeek: lastCompletedWeekKey(),
+    };
   }
   next = { ...next, badgeBank };
 
