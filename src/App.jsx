@@ -5,6 +5,7 @@ import Landing from "./screens/Landing.jsx";
 import SignUp from "./screens/SignUp.jsx";
 import LogIn from "./screens/LogIn.jsx";
 import GameApp from "./GameApp.jsx";
+import Privacy from "./screens/Privacy.jsx";
 import CaptureHarness from "./CaptureHarness.jsx";
 
 function Redirect({ to }) {
@@ -39,6 +40,9 @@ export default function App() {
 
     case "/login":
       return session ? <Redirect to="/app" /> : <LogIn />;
+
+    case "/privacy":
+      return <Privacy />;
 
     case "/app":
       return session ? <GameApp /> : <Redirect to="/login" />;

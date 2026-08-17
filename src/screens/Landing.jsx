@@ -275,6 +275,12 @@ export default function Landing() {
       <footer className="lp-footer">
         <div className="lp-wrap lp-footer-inner">
           <span>DIGNIVIRTUS</span>
+          <button
+            onClick={() => navigate("/privacy")}
+            style={{ background: "none", border: "none", color: "inherit", font: "inherit", letterSpacing: "inherit", cursor: "pointer", padding: 0 }}
+          >
+            PRIVACY
+          </button>
           <span>BUILT FOR PEOPLE WHO WANT THE REAL NUMBER</span>
         </div>
       </footer>
