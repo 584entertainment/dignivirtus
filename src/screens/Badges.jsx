@@ -23,7 +23,7 @@ export default function Badges({ nav }) {
     <div className="screen" style={{ paddingBottom: 24 }}>
       <h1 style={{ fontSize: 26, fontWeight: 900, margin: "4px 0 4px" }}>Badges</h1>
       <div className="mono" style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 16 }}>
-        {started} OF 20 STARTED · {gold} GOLD · {legend} LEGEND
+        {started} OF {BADGES.length} STARTED · {gold} GOLD · {legend} LEGEND
       </div>
 
       <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 16, paddingBottom: 2 }}>

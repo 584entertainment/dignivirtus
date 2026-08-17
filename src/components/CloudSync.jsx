@@ -51,6 +51,14 @@ export default function CloudSync({ onReady }) {
           fetchRemoteState(user.id),
           fetchMyProfile(user.id).catch(() => null),
         ]);
+        // A null right after login can be a token-timing hiccup rather than a
+        // genuinely new player (RLS returns zero rows to a not-yet-authed
+        // client instead of erroring). One retry costs a second and protects
+        // a returning player's save.
+        if (!incoming) {
+          await new Promise((r) => setTimeout(r, 1000));
+          incoming = await fetchRemoteState(user.id);
+        }
       } catch {
         // Offline or the project is asleep — fall through to the local cache so
         // the app still opens with the last known state.
@@ -91,6 +99,11 @@ export default function CloudSync({ onReady }) {
   // ---- debounced save ----
   useEffect(() => {
     if (!user || hydratedFor !== user.id) return;
+    // Never sync a pre-onboarding state to the cloud. A brand-new player has
+    // nothing worth saving yet, and — critically — a returning player who was
+    // wrongly hydrated with defaults (failed fetch) must not have that blank
+    // state overwrite their real save.
+    if (!state.onboarded) return;
 
     const snapshot = JSON.stringify(stripTransient(state));
     if (snapshot === lastSaved.current) return;
