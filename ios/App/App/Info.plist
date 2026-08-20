@@ -24,6 +24,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Dignivirtus reads your step count so your Endurance rating and step badges update automatically.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
